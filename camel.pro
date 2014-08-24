@@ -13,4 +13,8 @@ QMAKE_CXX    = clang++
 QMAKE_CXXFLAGS = -std=c++11 -stdlib=libc++
 
 ##############################
-SOURCES += main.cpp     \
+SOURCES += main.cpp \
+    logger.cpp      \
+
+HEADERS += \
+    logger.h        \

@@ -9,6 +9,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct Config
 {
+    QString path= "/etc/camel.conf";
+
     QString server_path;
     QString server_auth;
     QStringList server_args;
@@ -16,9 +18,7 @@ struct Config
     QString theme_path= "/usr/share/camel/theme";
     QString theme_name= "default";
 
-    static const QString default_path;
-
-    void parse(const QString& path= default_path);
+    void parse();
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

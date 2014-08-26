@@ -20,8 +20,12 @@ public:
 private:
     Config config;
     X11::Server server;
+    QString username, password;
 
-    void login();
+    void render();
+
+private slots:
+    void get_cred(const QString& username, const QString& password);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

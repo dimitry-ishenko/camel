@@ -30,7 +30,7 @@ int Manager::exec()
 
         if(!server.start()) throw std::runtime_error("X server failed to start");
 
-        login();
+        render();
 
         return 0;
     }
@@ -42,7 +42,7 @@ int Manager::exec()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::login()
+void Manager::render()
 {
     if(!QDir::setCurrent(config.theme_path+ "/"+ config.theme_name))
         throw std::runtime_error("Theme "+ config.theme_name.toStdString()+ " not found");
@@ -51,10 +51,18 @@ void Manager::login()
     QDeclarativeView widget(QUrl::fromLocalFile("theme.qml"));
 
     QObject* root= widget.rootObject();
-    root->connect(root, SIGNAL(quit()), &app, SLOT(quit()));
+    root->connect(root, SIGNAL(cred(QString,QString)), this, SLOT(get_cred(QString,QString)));
+    root->connect(root, SIGNAL(cred(QString,QString)), &app, SLOT(quit()));
 
     widget.setGeometry(QApplication::desktop()->screenGeometry());
     widget.show();
 
     app.exec();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::get_cred(const QString& _username, const QString& _password)
+{
+    username= _username;
+    password= _password;
 }

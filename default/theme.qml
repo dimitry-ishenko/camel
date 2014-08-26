@@ -8,7 +8,7 @@ Image {
     source: "background.jpg"
     fillMode: Image.PreserveAspectCrop
 
-    signal quit()
+    signal cred(string user, string pass)
 
     Rectangle {
         id: panel
@@ -101,7 +101,7 @@ Image {
                         event.accepted = true;
                     }
                     else if(event.key == Qt.Key_Return) {
-                        quit()
+                        cred(user.text, pass.text)
                         event.accepted = true
                     }
             }

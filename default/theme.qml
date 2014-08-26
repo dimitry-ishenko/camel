@@ -55,8 +55,8 @@ Image {
 
                 Keys.onPressed:
                     if(event.key == Qt.Key_Tab || event.key == Qt.Key_Return) {
-                        pass.focus= true;
-                        event.accepted= true;
+                        pass.focus = true;
+                        event.accepted = true;
                     }
             }
         }

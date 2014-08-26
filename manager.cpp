@@ -38,6 +38,7 @@ int Manager::exec()
     catch(std::exception& e)
     {
         std::cerr << e.what() << std::endl;
+        sys::logger << sys::error << e.what();
         return 1;
     }
 }

@@ -7,6 +7,7 @@
 #include <QtDeclarative/QDeclarativeView>
 #include <QGraphicsObject>
 #include <QDir>
+#include <QFile>
 
 #include <stdexcept>
 
@@ -45,10 +46,13 @@ int Manager::exec()
 void Manager::render()
 {
     if(!QDir::setCurrent(config.theme_path+ "/"+ config.theme_name))
-        throw std::runtime_error("Theme "+ config.theme_name.toStdString()+ " not found");
+        throw std::runtime_error("Theme dir "+ config.theme_name.toStdString()+ " not found");
+
+    if(!QFile::exists(config.theme_file))
+        throw std::runtime_error("Theme file "+ config.theme_file.toStdString()+ " not found");
 
     QApplication app(server.display());
-    QDeclarativeView widget(QUrl::fromLocalFile("theme.qml"));
+    QDeclarativeView widget(QUrl::fromLocalFile(config.theme_file));
 
     QObject* root= widget.rootObject();
     root->connect(root, SIGNAL(cred(QString,QString)), this, SLOT(get_cred(QString,QString)));

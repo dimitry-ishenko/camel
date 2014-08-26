@@ -17,6 +17,7 @@ struct Config
 
     QString theme_path= "/usr/share/camel/theme";
     QString theme_name= "default";
+    QString theme_file= "theme.qml";
 
     void parse();
 };

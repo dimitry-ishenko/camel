@@ -1,0 +1,60 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#include "manager.h"
+#include "logger.h"
+
+#include <QApplication>
+#include <QDesktopWidget>
+#include <QtDeclarative/QDeclarativeView>
+#include <QGraphicsObject>
+#include <QDir>
+
+#include <stdexcept>
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+Manager::Manager(QString config_path, QObject* parent):
+    QObject(parent)
+{
+    if(config_path.size()) config.path= config_path;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+int Manager::exec()
+{
+    try
+    {
+        config.parse();
+
+        if(config.server_path.size()) server.set_path(config.server_path);
+        if(config.server_auth.size()) server.set_auth(config.server_auth);
+        if(config.server_args.size()) server.set_args(config.server_args);
+
+        if(!server.start()) throw std::runtime_error("X server failed to start");
+
+        login();
+
+        return 0;
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::login()
+{
+    if(!QDir::setCurrent(config.theme_path+ "/"+ config.theme_name))
+        throw std::runtime_error("Theme "+ config.theme_name.toStdString()+ " not found");
+
+    QApplication app(server.display());
+    QDeclarativeView widget(QUrl::fromLocalFile("theme.qml"));
+
+    QObject* root= widget.rootObject();
+    root->connect(root, SIGNAL(quit()), &app, SLOT(quit()));
+
+    widget.setGeometry(QApplication::desktop()->screenGeometry());
+    widget.show();
+
+    app.exec();
+}

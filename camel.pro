@@ -16,8 +16,10 @@ SOURCES += main.cpp \
     logger.cpp      \
     x11.cpp         \
     config.cpp      \
+    manager.cpp     \
 
 HEADERS += \
     logger.h        \
     x11.h           \
     config.h        \
+    manager.h       \

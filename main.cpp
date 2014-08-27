@@ -26,5 +26,5 @@ int main(int argc, char* argv[])
         }
     }
 
-    return Manager(arg).exec();
+    return Manager(arg).run();
 }

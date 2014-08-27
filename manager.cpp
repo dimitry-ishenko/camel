@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
 #include "logger.h"
+#include "pam/pam.h"
 
 #include <QApplication>
 #include <QDesktopWidget>
@@ -19,7 +20,7 @@ Manager::Manager(QString config_path, QObject* parent):
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int Manager::exec()
+int Manager::run()
 {
     try
     {
@@ -56,8 +57,10 @@ void Manager::render()
     QDeclarativeView widget(QUrl::fromLocalFile(config.theme_file));
 
     QObject* root= widget.rootObject();
-    root->connect(root, SIGNAL(cred(QString,QString)), this, SLOT(get_cred(QString,QString)));
-    root->connect(root, SIGNAL(cred(QString,QString)), &app, SLOT(quit()));
+    root->connect(root, SIGNAL(user(QString)), this, SLOT(get_user(QString)));
+    root->connect(root, SIGNAL(pass(QString)), this, SLOT(get_pass(QString)));
+    root->connect(root, SIGNAL(exec(QString)), this, SLOT(get_exec(QString)));
+    root->connect(root, SIGNAL(pass(QString)), &app, SLOT(quit()));
 
     widget.setGeometry(QApplication::desktop()->screenGeometry());
     widget.show();
@@ -66,8 +69,6 @@ void Manager::render()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::get_cred(const QString& _username, const QString& _password)
-{
-    username= _username;
-    password= _password;
-}
+void Manager::get_user(const QString& value) { user= value; }
+void Manager::get_pass(const QString& value) { pass= value; }
+void Manager::get_exec(const QString& value) { exec= value; }

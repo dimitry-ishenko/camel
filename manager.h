@@ -15,17 +15,19 @@ class Manager: public QObject
     Q_OBJECT
 public:
     explicit Manager(QString config_path= QString(), QObject* parent= nullptr);
-    int exec();
+    int run();
 
 private:
     Config config;
     X11::Server server;
-    QString username, password;
 
+    QString user, pass, exec;
     void render();
 
 private slots:
-    void get_cred(const QString& username, const QString& password);
+    void get_user(const QString& value);
+    void get_pass(const QString& value);
+    void get_exec(const QString& value);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

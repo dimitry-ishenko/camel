@@ -8,7 +8,9 @@ Image {
     source: "background.jpg"
     fillMode: Image.PreserveAspectCrop
 
-    signal cred(string user, string pass)
+    signal user(string x)
+    signal pass(string x)
+    signal exec(string x)
 
     Rectangle {
         id: panel
@@ -47,15 +49,16 @@ Image {
             anchors.horizontalCenter: parent.horizontalCenter
 
             TextInput {
-                id: user
+                id: user_text
                 anchors.fill: parent
                 anchors.margins: 2
                 font.pointSize: 12
                 focus: true
 
                 Keys.onPressed:
-                    if(event.key == Qt.Key_Tab || event.key == Qt.Key_Return) {
-                        pass.focus = true;
+                    if(event.key === Qt.Key_Tab || event.key === Qt.Key_Return) {
+                        user(user_text.text);
+                        pass_text.focus = true;
                         event.accepted = true;
                     }
             }
@@ -88,7 +91,7 @@ Image {
             anchors.horizontalCenter: parent.horizontalCenter
 
             TextInput {
-                id: pass
+                id: pass_text
                 passwordCharacter: "*"
                 echoMode: TextInput.Password
                 anchors.fill: parent
@@ -97,11 +100,11 @@ Image {
 
                 Keys.onPressed:
                     if(event.key == Qt.Key_Tab) {
-                        user.focus = true;
+                        user_text.focus = true;
                         event.accepted = true;
                     }
                     else if(event.key == Qt.Key_Return) {
-                        cred(user.text, pass.text)
+                        pass(pass_text.text)
                         event.accepted = true
                     }
             }

@@ -8,9 +8,7 @@ Image {
     source: "background.jpg"
     fillMode: Image.PreserveAspectCrop
 
-    signal user(string x)
-    signal pass(string x)
-    signal exec(string x)
+    signal login()
 
     Rectangle {
         id: panel
@@ -50,6 +48,7 @@ Image {
 
             TextInput {
                 id: user_text
+                objectName: "username"
                 anchors.fill: parent
                 anchors.margins: 2
                 font.pointSize: 12
@@ -57,7 +56,6 @@ Image {
 
                 Keys.onPressed:
                     if(event.key === Qt.Key_Tab || event.key === Qt.Key_Return) {
-                        user(user_text.text);
                         pass_text.focus = true;
                         event.accepted = true;
                     }
@@ -92,6 +90,7 @@ Image {
 
             TextInput {
                 id: pass_text
+                objectName: "password"
                 passwordCharacter: "*"
                 echoMode: TextInput.Password
                 anchors.fill: parent
@@ -104,7 +103,7 @@ Image {
                         event.accepted = true;
                     }
                     else if(event.key == Qt.Key_Return) {
-                        pass(pass_text.text)
+                        login()
                         event.accepted = true
                     }
             }

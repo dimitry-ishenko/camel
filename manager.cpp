@@ -1,11 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
 #include "logger.h"
-#include "pam/pam.h"
 
-#include <QApplication>
 #include <QDesktopWidget>
-#include <QtDeclarative/QDeclarativeView>
 #include <QGraphicsObject>
 #include <QDir>
 #include <QFile>
@@ -32,7 +29,17 @@ int Manager::run()
 
         if(!server.start()) throw std::runtime_error("X server failed to start");
 
-        render();
+        context= QSharedPointer<pam::context>(new pam::context("camel"));
+        context->set_item(pam::item::ruser, "root");
+        context->set_item(pam::item::tty, server.name().toStdString());
+
+        application= QSharedPointer<QApplication>(new QApplication(server.display()));
+
+        while(true)
+        {
+            render();
+            application->exec();
+        }
 
         return 0;
     }
@@ -47,28 +54,39 @@ int Manager::run()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::render()
 {
-    if(!QDir::setCurrent(config.theme_path+ "/"+ config.theme_name))
-        throw std::runtime_error("Theme dir "+ config.theme_name.toStdString()+ " not found");
+    username= password= exec= error= nullptr;
+    view.clear();
 
-    if(!QFile::exists(config.theme_file))
-        throw std::runtime_error("Theme file "+ config.theme_file.toStdString()+ " not found");
+    QString current= QDir::currentPath();
+    try
+    {
+        if(!QDir::setCurrent(config.theme_path+ "/"+ config.theme_name))
+            throw std::runtime_error("Theme dir "+ config.theme_name.toStdString()+ " not found");
 
-    QApplication app(server.display());
-    QDeclarativeView widget(QUrl::fromLocalFile(config.theme_file));
+        if(!QFile::exists(config.theme_file))
+            throw std::runtime_error("Theme file "+ config.theme_file.toStdString()+ " not found");
 
-    QObject* root= widget.rootObject();
-    root->connect(root, SIGNAL(user(QString)), this, SLOT(get_user(QString)));
-    root->connect(root, SIGNAL(pass(QString)), this, SLOT(get_pass(QString)));
-    root->connect(root, SIGNAL(exec(QString)), this, SLOT(get_exec(QString)));
-    root->connect(root, SIGNAL(pass(QString)), &app, SLOT(quit()));
+        view= QSharedPointer<QDeclarativeView>(new QDeclarativeView(QUrl::fromLocalFile(config.theme_file)));
+        view->setGeometry(application->desktop()->screenGeometry());
+        view->show();
 
-    widget.setGeometry(QApplication::desktop()->screenGeometry());
-    widget.show();
+        QGraphicsObject* root= view->rootObject();
+        connect(root, SIGNAL(login()), application.data(), SLOT(quit()));
 
-    app.exec();
+        username= root->findChild<QObject*>("username");
+        if(!username) throw std::runtime_error("Missing username element");
+
+        password= root->findChild<QObject*>("password");
+        if(!password) throw std::runtime_error("Missing password element");
+
+        exec= root->findChild<QObject*>("exec");
+        error= root->findChild<QObject*>("error");
+
+        QDir::setCurrent(current);
+    }
+    catch(...)
+    {
+        QDir::setCurrent(current);
+        throw;
+    }
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::get_user(const QString& value) { user= value; }
-void Manager::get_pass(const QString& value) { pass= value; }
-void Manager::get_exec(const QString& value) { exec= value; }

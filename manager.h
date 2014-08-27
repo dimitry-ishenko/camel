@@ -5,9 +5,13 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "config.h"
 #include "x11.h"
+#include "pam/pam.h"
 
+#include <QDeclarativeView>
+#include <QApplication>
 #include <QObject>
 #include <QString>
+#include <QSharedPointer>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class Manager: public QObject
@@ -21,13 +25,17 @@ private:
     Config config;
     X11::Server server;
 
-    QString user, pass, exec;
-    void render();
+    QSharedPointer<QApplication> application;
+    QSharedPointer<pam::context> context;
+    QSharedPointer<QDeclarativeView> view;
 
-private slots:
-    void get_user(const QString& value);
-    void get_pass(const QString& value);
-    void get_exec(const QString& value);
+    QObject* username;
+    QObject* password;
+
+    QObject* exec;
+    QObject* error;
+
+    void render();
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

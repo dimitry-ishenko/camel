@@ -12,8 +12,8 @@ Image {
 
     Rectangle {
         id: panel
-        width: 330
-        height: 150
+        width: 400
+        height: 180
         radius: 5
         color: "#30ffffff"
         border.color: "#a0e0e0e0"
@@ -21,93 +21,133 @@ Image {
         anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
 
-        Text {
-            id: user_label
-            width: 60
-            text: "username"
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignRight
-            anchors.top: user_panel.top
-            anchors.bottom: user_panel.bottom
-            anchors.left: panel.left
-            anchors.leftMargin: 10
-            anchors.right: user_panel.left
-            anchors.rightMargin: 10
-            clip: true
-            font.pointSize: 11
-        }
+        Item {
+            id: user_area
+            height: 30
+            anchors.verticalCenter: parent.verticalCenter;
+            anchors.left: parent.left
+            anchors.leftMargin: 40
+            anchors.right: parent.right
+            anchors.rightMargin: 40
 
-        Rectangle {
-            id: user_panel
-            width: 140
-            height: 24
-            color: "#30ffffff"
-            border.color: "#a0e0e0e0"
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.horizontalCenter: parent.horizontalCenter
+            Text {
+                id: user_label
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: user_panel.left
+                anchors.margins: user_text.anchors.margins
+                anchors.rightMargin: 10
 
-            TextInput {
-                id: user_text
-                objectName: "username"
-                anchors.fill: parent
-                anchors.margins: 2
-                font.pointSize: 12
-                focus: true
+                text: "username"
+                font: user_text.font
+                color: "#ffffff"
+                verticalAlignment: Text.AlignTop
+                horizontalAlignment: Text.AlignRight
+                clip: true
 
-                Keys.onPressed:
-                    if(event.key === Qt.Key_Tab || event.key === Qt.Key_Return) {
-                        pass_text.focus = true;
-                        event.accepted = true;
-                    }
+                Text {
+                    anchors.fill: parent
+                    anchors.topMargin: 1
+                    anchors.rightMargin: -1
+                    z: -1
+
+                    text: parent.text
+                    font: parent.font
+                    color: "#60000000"
+                    verticalAlignment: parent.verticalAlignment
+                    horizontalAlignment: parent.horizontalAlignment
+                    clip: true
+                }
+            }
+
+            Rectangle {
+                id: user_panel
+                width: 200
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                color: "#30ffffff"
+                border.color: "#a0e0e0e0"
+
+                TextInput {
+                    id: user_text
+                    font.bold: false
+                    objectName: "username"
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    font.family: "Terminus"
+                    font.pointSize: 16
+                    focus: true
+
+                    Keys.onTabPressed: pass_text.focus = true
+                    Keys.onReturnPressed: pass_text.focus = true
+                }
             }
         }
 
-        Text {
-            id: pass_label
-            width: 60
-            text: "password"
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignRight
-            anchors.top: pass_panel.top
-            anchors.bottom: pass_panel.bottom
-            anchors.left: panel.left
-            anchors.leftMargin: 10
-            anchors.right: pass_panel.left
-            anchors.rightMargin: 10
-            clip: true
-            font.pointSize: 11
-        }
+        Item {
+            id: pass_area
+            height: user_area.height
+            anchors.top: user_area.bottom
+            anchors.topMargin: 10
+            anchors.left: user_area.left
+            anchors.right: user_area.right
 
-        Rectangle {
-            id: pass_panel
-            width: 140
-            height: 24
-            color: "#30ffffff"
-            border.color: "#a0e0e0e0"
-            anchors.top: user_panel.top
-            anchors.topMargin: 40
-            anchors.horizontalCenter: parent.horizontalCenter
+            Text {
+                id: pass_label
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: pass_panel.left
+                anchors.margins: pass_text.anchors.margins
+                anchors.rightMargin: 10
 
-            TextInput {
-                id: pass_text
-                objectName: "password"
-                passwordCharacter: "*"
-                echoMode: TextInput.Password
-                anchors.fill: parent
-                anchors.margins: 2
-                font.pointSize: 12
+                text: "password"
+                font: user_label.font
+                color: user_label.color
+                verticalAlignment: user_label.verticalAlignment
+                horizontalAlignment: user_label.horizontalAlignment
+                clip: true
 
-                Keys.onPressed:
-                    if(event.key == Qt.Key_Tab) {
-                        user_text.focus = true;
-                        event.accepted = true;
-                    }
-                    else if(event.key == Qt.Key_Return) {
-                        login()
-                        event.accepted = true
-                    }
+                Text {
+                    anchors.fill: parent
+                    anchors.topMargin: 1
+                    anchors.rightMargin: -1
+                    z: -1
+
+                    text: parent.text
+                    font: parent.font
+                    color: "#60000000"
+                    verticalAlignment: parent.verticalAlignment
+                    horizontalAlignment: parent.horizontalAlignment
+                    clip: true
+                }
+            }
+
+            Rectangle {
+                id: pass_panel
+                width: user_panel.width
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                color: user_panel.color
+                border.color: user_panel.border.color
+
+                TextInput {
+                    id: pass_text
+                    objectName: "password"
+                    anchors.fill: parent
+                    anchors.margins: user_text.anchors.margins
+                    font: user_text.font
+
+                    echoMode: TextInput.Password
+                    passwordCharacter: "*"
+
+                    Keys.onTabPressed: user_text.focus = true
+                    Keys.onReturnPressed: login()
+                }
             }
         }
-
     }
 }

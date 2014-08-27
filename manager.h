@@ -7,7 +7,7 @@
 #include "x11.h"
 #include "pam/pam.h"
 
-#include <QDeclarativeView>
+#include <QtDeclarative/QDeclarativeView>
 #include <QApplication>
 #include <QObject>
 #include <QString>
@@ -34,6 +34,7 @@ private:
 
     QObject* exec;
     QObject* error;
+    QObject* hostname;
 
     void render();
 };

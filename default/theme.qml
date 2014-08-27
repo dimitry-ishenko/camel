@@ -21,6 +21,37 @@ Image {
         anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
 
+        Text {
+            id: host_text
+            objectName: "hostname"
+            width: 200
+            height: 40
+            anchors.top: parent.top
+            anchors.topMargin: 20
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            font.family: "Terminus"
+            font.pointSize: 18
+            color: "#ffffff"
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
+            clip: true
+
+            Text {
+                anchors.fill: parent
+                anchors.topMargin: 2
+                anchors.leftMargin: 2
+                z: -1
+
+                text: parent.text
+                font: parent.font
+                color: "#60000000"
+                verticalAlignment: parent.verticalAlignment
+                horizontalAlignment: parent.horizontalAlignment
+                clip: true
+            }
+        }
+
         Item {
             id: user_area
             height: 30

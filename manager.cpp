@@ -4,6 +4,7 @@
 
 #include <QDesktopWidget>
 #include <QGraphicsObject>
+#include <QtNetwork/QHostInfo>
 #include <QDir>
 #include <QFile>
 
@@ -81,6 +82,9 @@ void Manager::render()
 
         exec= root->findChild<QObject*>("exec");
         error= root->findChild<QObject*>("error");
+        hostname= root->findChild<QObject*>("hostname");
+
+        if(hostname) hostname->setProperty("text", QHostInfo::localHostName());
 
         QDir::setCurrent(current);
     }

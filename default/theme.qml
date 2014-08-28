@@ -2,11 +2,9 @@ import QtQuick 1.1
 
 Image {
     id: background
-    width: 1920
-    height: 1200
-    clip: true
     source: "background.jpg"
     fillMode: Image.PreserveAspectCrop
+    clip: true
 
     signal reset()
     signal error(string message)

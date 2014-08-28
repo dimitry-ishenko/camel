@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "pam/pam_error.h"
 
+#include <QtDeclarative/QDeclarativeView>
 #include <QDesktopWidget>
 #include <QGraphicsObject>
 #include <QtNetwork/QHostInfo>
@@ -82,7 +83,7 @@ void Manager::render()
         if(!QFile::exists(config.theme_file))
             throw std::runtime_error("Theme file "+ config.theme_file.toStdString()+ " not found");
 
-        view= QSharedPointer<QDeclarativeView>(new QDeclarativeView(QUrl::fromLocalFile(config.theme_file)));
+        QDeclarativeView* view= new QDeclarativeView(QUrl::fromLocalFile(config.theme_file), application->desktop());
         view->setGeometry(application->desktop()->screenGeometry());
         view->show();
 

@@ -7,7 +7,6 @@
 #include "x11.h"
 #include "pam/pam.h"
 
-#include <QtDeclarative/QDeclarativeView>
 #include <QApplication>
 #include <QObject>
 #include <QString>
@@ -34,7 +33,6 @@ private:
 
     QSharedPointer<QApplication> application;
     QSharedPointer<pam::context> context;
-    QSharedPointer<QDeclarativeView> view;
 
     QObject* username;
     QObject* password;

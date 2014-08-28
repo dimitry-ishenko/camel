@@ -24,7 +24,7 @@ Image {
     Item {
         id: sessions
         objectName: "sessions"
-        property variant text: [ "XSession", "KDE-4" ]
+        property variant text: [ ]
     }
 
     Item {

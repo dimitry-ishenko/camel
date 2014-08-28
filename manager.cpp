@@ -9,6 +9,7 @@
 #include <QtNetwork/QHostInfo>
 #include <QDir>
 #include <QFile>
+#include <QStringList>
 
 #include <functional>
 #include <stdexcept>
@@ -99,6 +100,8 @@ void Manager::render()
         if(!password) throw std::runtime_error("Missing password element");
 
         sessions= root->findChild<QObject*>("sessions");
+        set_sessions();
+
         session= root->findChild<QObject*>("session");
 
         hostname= root->findChild<QObject*>("hostname");
@@ -139,4 +142,21 @@ bool Manager::get_pass(std::string& value)
         return true;
     }
     else return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+bool Manager::set_sessions()
+{
+    if(!sessions) return false;
+
+    QDir dir("/etc/X11/Sessions");
+    if(!dir.isReadable()) return false;
+
+    QStringList files= dir.entryList(QDir::Files);
+
+    if(config.sessions.size())
+        files= files.toSet().intersect(config.sessions.toSet()).toList();
+
+    sessions->setProperty("text", files);
+    return true;
 }

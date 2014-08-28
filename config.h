@@ -15,6 +15,8 @@ struct Config
     QString server_auth;
     QStringList server_args;
 
+    QStringList sessions;
+
     QString theme_path= "/usr/share/camel/theme";
     QString theme_name= "default";
     QString theme_file= "theme.qml";

@@ -8,7 +8,19 @@ Image {
     source: "background.jpg"
     fillMode: Image.PreserveAspectCrop
 
-    signal login()
+    signal quit()
+
+    Item {
+        id: sessions
+        objectName: "sessions"
+        property variant text: [ "XSession", "KDE-4" ]
+    }
+
+    Item {
+        id: session
+        objectName: "session"
+        property string text: "poweroff"
+    }
 
     Rectangle {
         id: panel
@@ -22,16 +34,17 @@ Image {
         anchors.horizontalCenter: parent.horizontalCenter
 
         Text {
-            id: host_text
+            id: hostname
             objectName: "hostname"
-            width: 200
+            width: 260
             height: 40
             anchors.top: parent.top
             anchors.topMargin: 20
             anchors.horizontalCenter: parent.horizontalCenter
 
-            font.family: "Terminus"
-            font.pointSize: 18
+            font.family: "Linux Biolinum"
+            font.pointSize: 28
+            font.bold: true
             color: "#ffffff"
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
@@ -53,7 +66,7 @@ Image {
         }
 
         Item {
-            id: user_area
+            id: username_area
             height: 30
             anchors.verticalCenter: parent.verticalCenter;
             anchors.left: parent.left
@@ -62,16 +75,16 @@ Image {
             anchors.rightMargin: 40
 
             Text {
-                id: user_label
+                id: username_label
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
-                anchors.right: user_panel.left
-                anchors.margins: user_text.anchors.margins
+                anchors.right: username_panel.left
+                anchors.margins: username.anchors.margins
                 anchors.rightMargin: 10
 
                 text: "username"
-                font: user_text.font
+                font: username.font
                 color: "#ffffff"
                 verticalAlignment: Text.AlignTop
                 horizontalAlignment: Text.AlignRight
@@ -93,8 +106,8 @@ Image {
             }
 
             Rectangle {
-                id: user_panel
-                width: 200
+                id: username_panel
+                width: 190
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
@@ -102,8 +115,7 @@ Image {
                 border.color: "#a0e0e0e0"
 
                 TextInput {
-                    id: user_text
-                    font.bold: false
+                    id: username
                     objectName: "username"
                     anchors.fill: parent
                     anchors.margins: 4
@@ -111,34 +123,34 @@ Image {
                     font.pointSize: 16
                     focus: true
 
-                    Keys.onTabPressed: pass_text.focus = true
-                    Keys.onReturnPressed: pass_text.focus = true
+                    Keys.onTabPressed: password.focus = true
+                    Keys.onReturnPressed: password.focus = true
                 }
             }
         }
 
         Item {
-            id: pass_area
-            height: user_area.height
-            anchors.top: user_area.bottom
+            id: password_area
+            height: username_area.height
+            anchors.top: username_area.bottom
             anchors.topMargin: 10
-            anchors.left: user_area.left
-            anchors.right: user_area.right
+            anchors.left: username_area.left
+            anchors.right: username_area.right
 
             Text {
-                id: pass_label
+                id: password_label
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
-                anchors.right: pass_panel.left
-                anchors.margins: pass_text.anchors.margins
+                anchors.right: password_panel.left
+                anchors.margins: password.anchors.margins
                 anchors.rightMargin: 10
 
                 text: "password"
-                font: user_label.font
-                color: user_label.color
-                verticalAlignment: user_label.verticalAlignment
-                horizontalAlignment: user_label.horizontalAlignment
+                font: username_label.font
+                color: username_label.color
+                verticalAlignment: username_label.verticalAlignment
+                horizontalAlignment: username_label.horizontalAlignment
                 clip: true
 
                 Text {
@@ -157,26 +169,26 @@ Image {
             }
 
             Rectangle {
-                id: pass_panel
-                width: user_panel.width
+                id: password_panel
+                width: username_panel.width
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
-                color: user_panel.color
-                border.color: user_panel.border.color
+                color: username_panel.color
+                border.color: username_panel.border.color
 
                 TextInput {
-                    id: pass_text
+                    id: password
                     objectName: "password"
                     anchors.fill: parent
-                    anchors.margins: user_text.anchors.margins
-                    font: user_text.font
+                    anchors.margins: username.anchors.margins
+                    font: username.font
 
                     echoMode: TextInput.Password
                     passwordCharacter: "*"
 
-                    Keys.onTabPressed: user_text.focus = true
-                    Keys.onReturnPressed: login()
+                    Keys.onTabPressed: username.focus = true
+                    Keys.onReturnPressed: quit()
                 }
             }
         }

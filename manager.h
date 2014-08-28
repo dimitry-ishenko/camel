@@ -32,11 +32,15 @@ private:
     QObject* username;
     QObject* password;
 
-    QObject* exec;
-    QObject* error;
+    QObject* sessions;
+    QObject* session;
+
     QObject* hostname;
 
     void render();
+
+    bool get_user(std::string&);
+    bool get_pass(std::string&);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

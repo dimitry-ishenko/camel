@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
 #include "logger.h"
+#include "pam/pam_error.h"
 
 #include <QDesktopWidget>
 #include <QGraphicsObject>
@@ -8,6 +9,7 @@
 #include <QDir>
 #include <QFile>
 
+#include <functional>
 #include <stdexcept>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,6 +33,10 @@ int Manager::run()
         if(!server.start()) throw std::runtime_error("X server failed to start");
 
         context= QSharedPointer<pam::context>(new pam::context("camel"));
+
+        context->set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
+        context->set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
+
         context->set_item(pam::item::ruser, "root");
         context->set_item(pam::item::tty, server.name().toStdString());
 
@@ -40,22 +46,30 @@ int Manager::run()
         {
             render();
             application->exec();
-        }
 
-        return 0;
+            try
+            {
+                context->authenticate();
+                break;
+            }
+            catch(pam::pam_error& e)
+            {
+                sys::logger << sys::error << e.what();
+            }
+        }
     }
     catch(std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
         sys::logger << sys::error << e.what();
         return 1;
     }
+    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::render()
 {
-    username= password= exec= error= nullptr;
+    username= password= sessions= session= hostname= nullptr;
     view.clear();
 
     QString current= QDir::currentPath();
@@ -72,7 +86,7 @@ void Manager::render()
         view->show();
 
         QGraphicsObject* root= view->rootObject();
-        connect(root, SIGNAL(login()), application.data(), SLOT(quit()));
+        connect(root, SIGNAL(quit()), application.data(), SLOT(quit()));
 
         username= root->findChild<QObject*>("username");
         if(!username) throw std::runtime_error("Missing username element");
@@ -80,10 +94,10 @@ void Manager::render()
         password= root->findChild<QObject*>("password");
         if(!password) throw std::runtime_error("Missing password element");
 
-        exec= root->findChild<QObject*>("exec");
-        error= root->findChild<QObject*>("error");
-        hostname= root->findChild<QObject*>("hostname");
+        sessions= root->findChild<QObject*>("sessions");
+        session= root->findChild<QObject*>("session");
 
+        hostname= root->findChild<QObject*>("hostname");
         if(hostname) hostname->setProperty("text", QHostInfo::localHostName());
 
         QDir::setCurrent(current);
@@ -93,4 +107,26 @@ void Manager::render()
         QDir::setCurrent(current);
         throw;
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+bool Manager::get_user(std::string& value)
+{
+    if(username)
+    {
+        value= username->property("text").toString().toStdString();
+        return true;
+    }
+    else return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+bool Manager::get_pass(std::string& value)
+{
+    if(password)
+    {
+        value= password->property("text").toString().toStdString();
+        return true;
+    }
+    else return false;
 }

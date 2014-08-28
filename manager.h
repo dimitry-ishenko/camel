@@ -21,6 +21,13 @@ public:
     explicit Manager(QString config_path= QString(), QObject* parent= nullptr);
     int run();
 
+signals:
+    void reset();
+    void error(const QString&);
+
+private slots:
+    void quit();
+
 private:
     Config config;
     X11::Server server;

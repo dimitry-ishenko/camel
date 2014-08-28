@@ -41,10 +41,11 @@ int Manager::run()
         context->set_item(pam::item::tty, server.name().toStdString());
 
         application= QSharedPointer<QApplication>(new QApplication(server.display()));
+        render();
 
         while(true)
         {
-            render();
+            emit reset();
             application->exec();
 
             try
@@ -54,6 +55,8 @@ int Manager::run()
             }
             catch(pam::pam_error& e)
             {
+                emit error(e.what());
+
                 sys::logger << sys::error << e.what();
             }
         }
@@ -69,9 +72,6 @@ int Manager::run()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::render()
 {
-    username= password= sessions= session= hostname= nullptr;
-    view.clear();
-
     QString current= QDir::currentPath();
     try
     {
@@ -86,7 +86,9 @@ void Manager::render()
         view->show();
 
         QGraphicsObject* root= view->rootObject();
-        connect(root, SIGNAL(quit()), application.data(), SLOT(quit()));
+        connect(this, SIGNAL(reset()), root, SIGNAL(reset()));
+        connect(this, SIGNAL(error(QString)), root, SIGNAL(error(QString)));
+        connect(root, SIGNAL(quit()), this, SLOT(quit()));
 
         username= root->findChild<QObject*>("username");
         if(!username) throw std::runtime_error("Missing username element");
@@ -107,6 +109,12 @@ void Manager::render()
         QDir::setCurrent(current);
         throw;
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::quit()
+{
+    if(application) application->quit();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

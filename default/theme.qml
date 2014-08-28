@@ -8,7 +8,20 @@ Image {
     source: "background.jpg"
     fillMode: Image.PreserveAspectCrop
 
+    signal reset()
+    signal error(string message)
     signal quit()
+
+    onReset: {
+        username.text = ""
+        password.text = ""
+
+        username.focus = true
+    }
+
+    onError: {
+        error.text = message
+    }
 
     Item {
         id: sessions
@@ -46,6 +59,38 @@ Image {
             font.pointSize: 28
             font.bold: true
             color: "#ffffff"
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
+            clip: true
+
+            Text {
+                anchors.fill: parent
+                anchors.topMargin: 2
+                anchors.leftMargin: 2
+                z: -1
+
+                text: parent.text
+                font: parent.font
+                color: "#60000000"
+                verticalAlignment: parent.verticalAlignment
+                horizontalAlignment: parent.horizontalAlignment
+                clip: true
+            }
+        }
+
+        Text {
+            id: error
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 10
+            height: 20
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+
+            font.family: "Terminus"
+            font.pointSize: 14
+            color: "red"
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             clip: true
@@ -121,7 +166,6 @@ Image {
                     anchors.margins: 4
                     font.family: "Terminus"
                     font.pointSize: 16
-                    focus: true
 
                     Keys.onTabPressed: password.focus = true
                     Keys.onReturnPressed: password.focus = true

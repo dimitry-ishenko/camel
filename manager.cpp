@@ -50,6 +50,7 @@ int Manager::run()
 
             try
             {
+                context->reset_item(pam::item::user);
                 context->authenticate();
                 break;
             }

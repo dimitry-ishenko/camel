@@ -60,12 +60,14 @@ int Manager::run()
             {
                 emit error(e.what());
 
+                std::cerr << e.what() << std::endl;
                 sys::logger << sys::error << e.what();
             }
         }
     }
     catch(std::exception& e)
     {
+        std::cerr << e.what() << std::endl;
         sys::logger << sys::error << e.what();
         return 1;
     }

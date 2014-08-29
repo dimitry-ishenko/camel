@@ -32,54 +32,79 @@ int Manager::run()
         if(config.server_auth.size()) server.set_auth(config.server_auth);
         if(config.server_args.size()) server.set_args(config.server_args);
 
-        if(!server.start()) throw std::runtime_error("X server failed to start");
-
-        render();
-
-        context= QSharedPointer<pam::context>(new pam::context("camel"));
-
-        context->set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
-        context->set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
-
-        context->set_item(pam::item::ruser, "root");
-        context->set_item(pam::item::tty, server.name().toStdString());
-
         while(true)
         {
-            emit reset();
-            application->exec();
+            if(!server.start()) throw std::runtime_error("X server failed to start");
 
-            try
+            render();
+
+            context= QSharedPointer<pam::context>(new pam::context("camel"));
+
+            context->set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
+            context->set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
+
+            context->set_item(pam::item::ruser, "root");
+            context->set_item(pam::item::tty, server.name().toStdString());
+
+            while(true)
             {
-                context->reset_item(pam::item::user);
-                context->authenticate();
+                emit reset();
+                application->exec();
 
-                QString value= get_session();
-                if(value == "poweroff")
+                try
                 {
-                }
-                else if(value == "reboot")
-                {
-                }
-                else if(value == "hibernate")
-                {
-                }
-                else if(value == "suspend")
-                {
-                }
-                else
-                {
-                }
+                    context->reset_item(pam::item::user);
+                    context->authenticate();
 
-                break;
+                    QString value= get_session();
+                    if(value == "poweroff")
+                    {
+                    }
+                    else if(value == "reboot")
+                    {
+                    }
+                    else if(value == "hibernate")
+                    {
+                    }
+                    else if(value == "suspend")
+                    {
+                    }
+                    else
+                    {
+                        context->open_session();
+
+                        // get user data
+                        // store it in PAM
+
+                        // fork
+
+                        // child: extract user data
+                        // child: sessreg?
+                        // child: switch user
+                        // child: set client auth
+                        // child: exec session
+                        // child: exit
+
+                        // server: wait for child
+                        // server: sessreg?
+
+                        context->close_session();
+                    }
+
+                    break;
+                }
+                catch(pam::pam_error& e)
+                {
+                    emit error(e.what());
+
+                    std::cerr << e.what() << std::endl;
+                    sys::logger << sys::error << e.what();
+                }
             }
-            catch(pam::pam_error& e)
-            {
-                emit error(e.what());
 
-                std::cerr << e.what() << std::endl;
-                sys::logger << sys::error << e.what();
-            }
+            context.clear();
+            application.clear();
+            server.stop();
         }
     }
     catch(std::exception& e)

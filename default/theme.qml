@@ -30,7 +30,7 @@ Image {
     Item {
         id: session
         objectName: "session"
-        property string text: "poweroff"
+        property string text: ""
     }
 
     Rectangle {

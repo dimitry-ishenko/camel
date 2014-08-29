@@ -54,6 +54,24 @@ int Manager::run()
             {
                 context->reset_item(pam::item::user);
                 context->authenticate();
+
+                QString value= get_session();
+                if(value == "poweroff")
+                {
+                }
+                else if(value == "reboot")
+                {
+                }
+                else if(value == "hibernate")
+                {
+                }
+                else if(value == "suspend")
+                {
+                }
+                else
+                {
+                }
+
                 break;
             }
             catch(pam::pam_error& e)
@@ -161,4 +179,13 @@ bool Manager::set_sessions()
 
     sessions->setProperty("text", files);
     return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+QString Manager::get_session()
+{
+    QString value;
+    if(session) value= session->property("text").toString();
+
+    return value.size()? value: "Xsession";
 }

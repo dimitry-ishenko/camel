@@ -165,20 +165,21 @@ bool Manager::get_pass(std::string& value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-bool Manager::set_sessions()
+void Manager::set_sessions()
 {
-    if(!sessions) return false;
+    if(sessions)
+    {
+        QDir dir("/etc/X11/Sessions");
+        if(dir.isReadable())
+        {
+            QStringList files= dir.entryList(QDir::Files);
 
-    QDir dir("/etc/X11/Sessions");
-    if(!dir.isReadable()) return false;
+            if(config.sessions.size())
+                files= files.toSet().intersect(config.sessions.toSet()).toList();
 
-    QStringList files= dir.entryList(QDir::Files);
-
-    if(config.sessions.size())
-        files= files.toSet().intersect(config.sessions.toSet()).toList();
-
-    sessions->setProperty("text", files);
-    return true;
+            sessions->setProperty("text", files);
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

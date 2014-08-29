@@ -47,7 +47,7 @@ private:
     bool get_user(std::string&);
     bool get_pass(std::string&);
 
-    bool set_sessions();
+    void set_sessions();
     QString get_session();
 };
 

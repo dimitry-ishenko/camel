@@ -34,6 +34,8 @@ int Manager::run()
 
         if(!server.start()) throw std::runtime_error("X server failed to start");
 
+        render();
+
         context= QSharedPointer<pam::context>(new pam::context("camel"));
 
         context->set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
@@ -41,9 +43,6 @@ int Manager::run()
 
         context->set_item(pam::item::ruser, "root");
         context->set_item(pam::item::tty, server.name().toStdString());
-
-        application= QSharedPointer<QApplication>(new QApplication(server.display()));
-        render();
 
         while(true)
         {
@@ -98,6 +97,9 @@ void Manager::render()
     QString current= QDir::currentPath();
     try
     {
+        username= password= sessions= session= hostname= nullptr;
+        application= QSharedPointer<QApplication>(new QApplication(server.display()));
+
         if(!QDir::setCurrent(config.theme_path+ "/"+ config.theme_name))
             throw std::runtime_error("Theme dir "+ config.theme_name.toStdString()+ " not found");
 

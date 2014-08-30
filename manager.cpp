@@ -32,7 +32,7 @@ int Manager::run()
         if(config.server_auth.size()) server.set_auth(config.server_auth);
         if(config.server_args.size()) server.set_args(config.server_args);
 
-        while(true)
+        do
         {
             if(!server.start()) throw std::runtime_error("X server failed to start");
 
@@ -106,6 +106,7 @@ int Manager::run()
             application.clear();
             server.stop();
         }
+        while(false);
     }
     catch(std::exception& e)
     {

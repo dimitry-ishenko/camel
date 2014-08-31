@@ -17,6 +17,7 @@ class Manager: public QObject
     Q_OBJECT
 public:
     explicit Manager(QString config_path= QString(), QObject* parent= nullptr);
+    ~Manager();
     int run();
 
 signals:
@@ -25,6 +26,10 @@ signals:
 
 private:
     Config config;
+    X11::Server* server= nullptr;
+
+    QApplication* application= nullptr;
+    pam::context* context= nullptr;
 
     QObject* username;
     QObject* password;
@@ -34,7 +39,7 @@ private:
 
     QObject* hostname;
 
-    void render(QApplication*);
+    void render();
 
     bool get_user(std::string&);
     bool get_pass(std::string&);
@@ -42,7 +47,7 @@ private:
     void set_sessions();
     QString get_session();
 
-    void save_env(pam::context&);
+    void save_env();
 
     void spawn();
     void spawn_child();

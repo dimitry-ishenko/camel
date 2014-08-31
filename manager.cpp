@@ -24,76 +24,91 @@ Manager::Manager(QString config_path, QObject* parent):
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+Manager::~Manager()
+{
+    delete context;
+    delete application;
+    delete server;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 int Manager::run()
 {
     try
     {
-        X11::Server server;
+        server= new X11::Server();
 
-        if(config.server_path.size()) server.set_path(config.server_path);
-        if(config.server_auth.size()) server.set_auth(config.server_auth);
-        if(config.server_args.size()) server.set_args(config.server_args);
+        if(config.server_path.size()) server->set_path(config.server_path);
+        if(config.server_auth.size()) server->set_auth(config.server_auth);
+        if(config.server_args.size()) server->set_args(config.server_args);
 
-        if(server.start())
+        if(!server->start()) throw std::runtime_error("X server failed to start");
+
+        application= new QApplication(server->display());
+        render();
+
+        context= new pam::context("camel");
+
+        context->set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
+        context->set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
+
+        context->set_item(pam::item::ruser, "root");
+        context->set_item(pam::item::tty, server->name().toStdString());
+
+        while(true)
         {
-            QApplication application(server.display());
-            render(&application);
+            emit reset();
+            application->exec();
 
-            pam::context context("camel");
-
-            context.set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
-            context.set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
-
-            context.set_item(pam::item::ruser, "root");
-            context.set_item(pam::item::tty, server.name().toStdString());
-
-            while(true)
+            try
             {
-                emit reset();
-                application.exec();
+                context->reset_item(pam::item::user);
+                context->authenticate();
 
-                try
+                QString value= get_session();
+                if(value == "poweroff")
                 {
-                    context.reset_item(pam::item::user);
-                    context.authenticate();
-
-                    QString value= get_session();
-                    if(value == "poweroff")
-                    {
-                    }
-                    else if(value == "reboot")
-                    {
-                    }
-                    else if(value == "hibernate")
-                    {
-                    }
-                    else if(value == "suspend")
-                    {
-                    }
-                    else
-                    {
-                        context.open_session();
-
-                        save_env(context);
-                        spawn();
-
-                        context.close_session();
-                    }
-
-                    break;
                 }
-                catch(pam::pam_error& e)
+                else if(value == "reboot")
                 {
-                    emit error(e.what());
-
-                    std::cerr << e.what() << std::endl;
-                    sys::logger << sys::error << e.what();
                 }
+                else if(value == "hibernate")
+                {
+                }
+                else if(value == "suspend")
+                {
+                }
+                else
+                {
+                    context->open_session();
+
+                    save_env();
+                    spawn();
+
+                    context->close_session();
+                }
+
+                break;
+            }
+            catch(pam::pam_error& e)
+            {
+                emit error(e.what());
+
+                std::cerr << e.what() << std::endl;
+                sys::logger << sys::error << e.what();
             }
         }
-        else throw std::runtime_error("X server failed to start");
 
-        server.stop();
+        delete context;
+        context= nullptr;
+
+        delete application;
+        application= nullptr;
+
+        server->stop();
+        delete server;
+        server= nullptr;
+
         return 0;
     }
     catch(std::exception& e)
@@ -105,7 +120,7 @@ int Manager::run()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::render(QApplication* application)
+void Manager::render()
 {
     QString current= QDir::currentPath();
     try
@@ -207,9 +222,9 @@ QString Manager::get_session()
 #include <pwd.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::save_env(pam::context& context)
+void Manager::save_env()
 {
-    std::string name= context.get_item(pam::item::user);
+    std::string name= context->get_item(pam::item::user);
 
     passwd* pwd= getpwnam(name.data());
     if(pwd)
@@ -224,12 +239,12 @@ void Manager::save_env(pam::context& context)
         }
         std::string home= pwd->pw_dir;
 
-        context.set_env("USER", name);
-        context.set_env("HOME", home);
-        context.set_env("PWD", home);
-        context.set_env("SHELL", shell);
-        context.set_env("DISPLAY", context.get_item(pam::item::tty));
-        context.set_env("XAUTHORITY", home+ "/.Xauthority");
+        context->set_env("USER", name);
+        context->set_env("HOME", home);
+        context->set_env("PWD", home);
+        context->set_env("SHELL", shell);
+        context->set_env("DISPLAY", server->name().toStdString());
+        context->set_env("XAUTHORITY", home+ "/.Xauthority");
     }
     else throw std::runtime_error("No entry for "+ name+ " in the password database");
 }

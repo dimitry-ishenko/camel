@@ -1,12 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
-#include "config.h"
-#include "x11.h"
-#include "pam/pam.h"
 #include "pam/pam_error.h"
 #include "logger.h"
 
-#include <QApplication>
 #include <QtDeclarative/QDeclarativeView>
 #include <QDesktopWidget>
 #include <QGraphicsObject>

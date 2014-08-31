@@ -78,20 +78,8 @@ int Manager::run()
                     {
                         context.open_session();
 
-                        // get user data
-                        // store it in PAM
-
-                        // fork
-
-                        // child: extract user data
-                        // child: sessreg?
-                        // child: switch user
-                        // child: set client auth
-                        // child: exec session
-                        // child: exit
-
-                        // server: wait for child
-                        // server: sessreg?
+                        save_env(context);
+                        spawn();
 
                         context.close_session();
                     }
@@ -213,4 +201,84 @@ QString Manager::get_session()
     if(session) value= session->property("text").toString();
 
     return value.size()? value: "Xsession";
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#include <cstring>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::save_env(pam::context& context)
+{
+    std::string name= context.get_item(pam::item::user);
+
+    passwd* pwd= getpwnam(name.data());
+    if(pwd)
+    {
+        std::string name= pwd->pw_name;
+        std::string shell= pwd->pw_shell;
+        if(shell.empty())
+        {
+            setusershell();
+            shell= getusershell();
+            endusershell();
+        }
+        std::string home= pwd->pw_dir;
+
+        context.set_env("USER", name);
+        context.set_env("HOME", home);
+        context.set_env("PWD", home);
+        context.set_env("SHELL", shell);
+        context.set_env("DISPLAY", context.get_item(pam::item::tty));
+        context.set_env("XAUTHORITY", home+ "/.Xauthority");
+    }
+    else throw std::runtime_error("No entry for "+ name+ " in the password database");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#include <cerrno>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::spawn()
+{
+    pid_t pid= fork();
+    if(pid == -1) throw std::system_error(errno, std::generic_category());
+
+    if(pid)
+    {
+        int status;
+        while(pid != wait(&status))
+        {
+            // server still running?
+        }
+
+        if(WIFEXITED(status) && !WEXITSTATUS(status))
+        {
+            // server: sessreg?
+        }
+    }
+    else spawn_child();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#include <cstdlib>
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::spawn_child()
+{
+    // child: extract user data
+    // child: sessreg?
+    // child: switch user
+    // child: set client auth
+    // child: exec session
+    quick_exit(EXIT_SUCCESS);
 }

@@ -1,8 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
-#include "logger.h"
+#include "config.h"
+#include "x11.h"
+#include "pam/pam.h"
 #include "pam/pam_error.h"
+#include "logger.h"
 
+#include <QApplication>
 #include <QtDeclarative/QDeclarativeView>
 #include <QDesktopWidget>
 #include <QGraphicsObject>
@@ -19,6 +23,8 @@ Manager::Manager(QString config_path, QObject* parent):
     QObject(parent)
 {
     if(config_path.size()) config.path= config_path;
+
+    config.parse();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,35 +32,34 @@ int Manager::run()
 {
     try
     {
-        config.parse();
+        X11::Server server;
 
         if(config.server_path.size()) server.set_path(config.server_path);
         if(config.server_auth.size()) server.set_auth(config.server_auth);
         if(config.server_args.size()) server.set_args(config.server_args);
 
-        do
+        if(server.start())
         {
-            if(!server.start()) throw std::runtime_error("X server failed to start");
+            QApplication application(server.display());
+            render(&application);
 
-            render();
+            pam::context context("camel");
 
-            context= QSharedPointer<pam::context>(new pam::context("camel"));
+            context.set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
+            context.set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
 
-            context->set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
-            context->set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
-
-            context->set_item(pam::item::ruser, "root");
-            context->set_item(pam::item::tty, server.name().toStdString());
+            context.set_item(pam::item::ruser, "root");
+            context.set_item(pam::item::tty, server.name().toStdString());
 
             while(true)
             {
                 emit reset();
-                application->exec();
+                application.exec();
 
                 try
                 {
-                    context->reset_item(pam::item::user);
-                    context->authenticate();
+                    context.reset_item(pam::item::user);
+                    context.authenticate();
 
                     QString value= get_session();
                     if(value == "poweroff")
@@ -71,7 +76,7 @@ int Manager::run()
                     }
                     else
                     {
-                        context->open_session();
+                        context.open_session();
 
                         // get user data
                         // store it in PAM
@@ -88,7 +93,7 @@ int Manager::run()
                         // server: wait for child
                         // server: sessreg?
 
-                        context->close_session();
+                        context.close_session();
                     }
 
                     break;
@@ -101,12 +106,11 @@ int Manager::run()
                     sys::logger << sys::error << e.what();
                 }
             }
-
-            context.clear();
-            application.clear();
-            server.stop();
         }
-        while(false);
+        else throw std::runtime_error("X server failed to start");
+
+        server.stop();
+        return 0;
     }
     catch(std::exception& e)
     {
@@ -114,17 +118,15 @@ int Manager::run()
         sys::logger << sys::error << e.what();
         return 1;
     }
-    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::render()
+void Manager::render(QApplication* application)
 {
     QString current= QDir::currentPath();
     try
     {
         username= password= sessions= session= hostname= nullptr;
-        application= QSharedPointer<QApplication>(new QApplication(server.display()));
 
         if(!QDir::setCurrent(config.theme_path+ "/"+ config.theme_name))
             throw std::runtime_error("Theme dir "+ config.theme_name.toStdString()+ " not found");
@@ -139,7 +141,7 @@ void Manager::render()
         QGraphicsObject* root= view->rootObject();
         connect(this, SIGNAL(reset()), root, SIGNAL(reset()));
         connect(this, SIGNAL(error(QString)), root, SIGNAL(error(QString)));
-        connect(root, SIGNAL(quit()), this, SLOT(quit()));
+        connect(root, SIGNAL(quit()), application, SLOT(quit()));
 
         username= root->findChild<QObject*>("username");
         if(!username) throw std::runtime_error("Missing username element");
@@ -162,12 +164,6 @@ void Manager::render()
         QDir::setCurrent(current);
         throw;
     }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::quit()
-{
-    if(application) application->quit();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -18,6 +18,7 @@ SOURCES += main.cpp     \
     config.cpp          \
     manager.cpp         \
     pam/pam.cpp         \
+    process/process.cpp \
 
 HEADERS += \
     logger.h            \
@@ -28,6 +29,7 @@ HEADERS += \
     pam/pam_error.h     \
     pam/pam_type.h      \
     errno_error.h       \
+    process/process.h   \
 
 OTHER_FILES += \
     default/theme.qml   \

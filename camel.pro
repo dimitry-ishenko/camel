@@ -13,7 +13,7 @@ QMAKE_CXXFLAGS = -std=c++11 -stdlib=libc++
 
 ##############################
 SOURCES += main.cpp     \
-    logger.cpp          \
+    log.cpp             \
     x11.cpp             \
     config.cpp          \
     manager.cpp         \
@@ -21,7 +21,7 @@ SOURCES += main.cpp     \
     process/process.cpp \
 
 HEADERS += \
-    logger.h            \
+    log.h               \
     x11.h               \
     config.h            \
     manager.h           \

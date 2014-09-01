@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
 #include "pam/pam_error.h"
-#include "logger.h"
+#include "log.h"
 
 #include <QtDeclarative/QDeclarativeView>
 #include <QDesktopWidget>
@@ -95,7 +95,7 @@ int Manager::run()
                 emit error(e.what());
 
                 std::cerr << e.what() << std::endl;
-                sys::logger << sys::error << e.what();
+                logger << log::error << e.what();
             }
         }
 
@@ -114,7 +114,7 @@ int Manager::run()
     catch(std::exception& e)
     {
         std::cerr << e.what() << std::endl;
-        sys::logger << sys::error << e.what();
+        logger << log::error << e.what();
         return 1;
     }
 }

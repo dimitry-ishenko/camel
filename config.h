@@ -6,17 +6,26 @@
 #include <QStringList>
 #include <QString>
 
+#include <string>
+#include <vector>
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct Config
 {
     QString path= "/etc/camel.conf";
 
-    QString server_path;
-    QString server_auth;
-    QStringList server_args;
+    // X server settings
+    std::string server_path;
+    std::string server_auth= "/run/camel.auth";
+    std::vector<std::string> server_args;
 
+    // PAM settings
+    std::string service= "camel";
+
+    // other settings
     QStringList sessions;
 
+    // theme settings
     QString theme_path= "/usr/share/camel/theme";
     QString theme_name= "default";
     QString theme_file= "theme.qml";

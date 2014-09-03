@@ -52,8 +52,7 @@ private:
 
     void set_environ();
 
-    void spawn();
-    void spawn_child();
+    int sess_proc(const QString& sess);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

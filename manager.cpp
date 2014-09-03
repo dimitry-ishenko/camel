@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
+#include "process/process.h"
 #include "pam/pam_error.h"
 #include "log.h"
 
@@ -74,9 +75,10 @@ int Manager::run()
                 else
                 {
                     context->open_session();
-
                     set_environ();
-                    spawn();
+
+                    process sess(&Manager::sess_proc, this, value);
+                    sess.join();
 
                     context->close_session();
                 }
@@ -179,7 +181,7 @@ void Manager::set_sessions()
 {
     if(sessions)
     {
-        QDir dir("/etc/X11/Sessions");
+        QDir dir(config.sessions_path);
         if(dir.isReadable())
         {
             QStringList files= dir.entryList(QDir::Files);
@@ -237,37 +239,13 @@ void Manager::set_environ()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::spawn()
+int Manager::sess_proc(const QString& sess)
 {
-    /*
-    pid_t pid= fork();
-    if(pid == -1) throw std::system_error(errno, std::generic_category());
+    environment e= context->environment();
 
-    if(pid)
-    {
-        int status;
-        while(pid != wait(&status))
-        {
-            // server still running?
-        }
-
-        if(WIFEXITED(status) && !WEXITSTATUS(status))
-        {
-            // server: sessreg?
-        }
-    }
-    else spawn_child();
-    */
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::spawn_child()
-{
-    // child: extract user data
-    // child: sessreg?
     // child: switch user
     // child: set client auth
-    // child: exec session
-    exit(EXIT_SUCCESS);
+
+    this_process::replace_e(e, (config.sessions_path+ "/"+ sess).toStdString());
+    return 0;
 }

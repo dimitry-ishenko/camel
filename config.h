@@ -22,7 +22,8 @@ struct Config
     // PAM settings
     std::string service= "camel";
 
-    // other settings
+    // session settings
+    QString sessions_path= "/etc/X11/Sessions";
     QStringList sessions;
 
     // theme settings

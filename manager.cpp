@@ -46,8 +46,8 @@ int Manager::run()
         context->set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
         context->set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
 
-        context->set_item(pam::item::ruser, "root");
-        context->set_item(pam::item::tty, server->name());
+        context->set(pam::item::ruser, "root");
+        context->set(pam::item::tty, server->name());
 
         while(true)
         {
@@ -224,12 +224,12 @@ void Manager::set_environ()
         }
         std::string home= pwd->pw_dir;
 
-        context->set_environ("USER", name);
-        context->set_environ("HOME", home);
-        context->set_environ("PWD", home);
-        context->set_environ("SHELL", shell);
-        context->set_environ("DISPLAY", server->name());
-        context->set_environ("XAUTHORITY", home+ "/.Xauthority");
+        context->set("USER", name);
+        context->set("HOME", home);
+        context->set("PWD", home);
+        context->set("SHELL", shell);
+        context->set("DISPLAY", server->name());
+        context->set("XAUTHORITY", home+ "/.Xauthority");
     }
     else throw std::runtime_error("No entry for "+ name+ " in the password database");
 }

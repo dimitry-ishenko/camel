@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
+#include "x11.h"
 #include "process/process.h"
 #include "pam/pam_error.h"
 #include "log.h"
@@ -30,9 +31,9 @@ int Manager::run()
 {
     try
     {
-        server.reset(new x11::server(config.server_auth, std::string(), config.server_path, config.server_args));
+        x11::server server(config.server_auth, std::string(), config.server_path, config.server_args);
 
-        application.reset(new QApplication(server->display()));
+        application.reset(new QApplication(server.display()));
         render();
 
         context.reset(new pam::context(config.service));
@@ -41,7 +42,7 @@ int Manager::run()
         context->set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
 
         context->set(pam::item::ruser, "root");
-        context->set(pam::item::tty, server->name());
+        context->set(pam::item::tty, server.name());
 
         while(true)
         {
@@ -86,7 +87,6 @@ int Manager::run()
 
         context.reset();
         application.reset();
-        server.reset();
 
         return 0;
     }

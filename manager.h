@@ -4,7 +4,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "config.h"
-#include "x11.h"
 #include "pam/pam.h"
 
 #include <QApplication>
@@ -29,7 +28,6 @@ signals:
 
 private:
     Config config;
-    std::unique_ptr<x11::server> server;
 
     std::unique_ptr<QApplication> application;
     std::unique_ptr<pam::context> context;

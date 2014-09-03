@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QStringList>
 
+#include <algorithm>
 #include <functional>
 #include <stdexcept>
 
@@ -24,36 +25,28 @@ Manager::Manager(QString config_path, QObject* parent):
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-Manager::~Manager()
-{
-    delete context;
-    delete application;
-    delete server;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 int Manager::run()
 {
     try
     {
-        server= new X11::Server();
+        std::string path= x11::server::default_path;
+        if(config.server_path.size()) path= config.server_path;
 
-        if(config.server_path.size()) server->set_path(config.server_path);
-        if(config.server_auth.size()) server->set_auth(config.server_auth);
-        if(config.server_args.size()) server->set_args(config.server_args);
+        arguments args= x11::server::default_args;
+        if(config.server_args.size()) args= config.server_args;
 
-        if(!server->start()) throw std::runtime_error("X server failed to start");
+        server.reset(new x11::server(config.server_auth, x11::server::default_name, path, args));
 
-        application= new QApplication(server->display());
+        application.reset(new QApplication(server->display()));
         render();
 
-        context= new pam::context("camel");
+        context.reset(new pam::context(config.service));
 
         context->set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
         context->set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
 
         context->set_item(pam::item::ruser, "root");
-        context->set_item(pam::item::tty, server->name().toStdString());
+        context->set_item(pam::item::tty, server->name());
 
         while(true)
         {
@@ -62,7 +55,7 @@ int Manager::run()
 
             try
             {
-                context->reset_item(pam::item::user);
+                context->reset(pam::item::user);
                 context->authenticate();
 
                 QString value= get_session();
@@ -82,7 +75,7 @@ int Manager::run()
                 {
                     context->open_session();
 
-                    save_env();
+                    set_environ();
                     spawn();
 
                     context->close_session();
@@ -99,15 +92,9 @@ int Manager::run()
             }
         }
 
-        delete context;
-        context= nullptr;
-
-        delete application;
-        application= nullptr;
-
-        server->stop();
-        delete server;
-        server= nullptr;
+        context.reset();
+        application.reset();
+        server.reset();
 
         return 0;
     }
@@ -140,7 +127,7 @@ void Manager::render()
         QGraphicsObject* root= view->rootObject();
         connect(this, SIGNAL(reset()), root, SIGNAL(reset()));
         connect(this, SIGNAL(error(QString)), root, SIGNAL(error(QString)));
-        connect(root, SIGNAL(quit()), application, SLOT(quit()));
+        connect(root, SIGNAL(quit()), application.get(), SLOT(quit()));
 
         username= root->findChild<QObject*>("username");
         if(!username) throw std::runtime_error("Missing username element");
@@ -222,9 +209,9 @@ QString Manager::get_session()
 #include <pwd.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::save_env()
+void Manager::set_environ()
 {
-    std::string name= context->get_item(pam::item::user);
+    std::string name= context->item(pam::item::user);
 
     passwd* pwd= getpwnam(name.data());
     if(pwd)
@@ -239,27 +226,21 @@ void Manager::save_env()
         }
         std::string home= pwd->pw_dir;
 
-        context->set_env("USER", name);
-        context->set_env("HOME", home);
-        context->set_env("PWD", home);
-        context->set_env("SHELL", shell);
-        context->set_env("DISPLAY", server->name().toStdString());
-        context->set_env("XAUTHORITY", home+ "/.Xauthority");
+        context->set_environ("USER", name);
+        context->set_environ("HOME", home);
+        context->set_environ("PWD", home);
+        context->set_environ("SHELL", shell);
+        context->set_environ("DISPLAY", server->name());
+        context->set_environ("XAUTHORITY", home+ "/.Xauthority");
     }
     else throw std::runtime_error("No entry for "+ name+ " in the password database");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <cerrno>
-#include <unistd.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::spawn()
 {
+    /*
     pid_t pid= fork();
     if(pid == -1) throw std::system_error(errno, std::generic_category());
 
@@ -277,11 +258,8 @@ void Manager::spawn()
         }
     }
     else spawn_child();
+    */
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <cstdlib>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::spawn_child()
@@ -291,5 +269,5 @@ void Manager::spawn_child()
     // child: switch user
     // child: set client auth
     // child: exec session
-    quick_exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }

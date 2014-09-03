@@ -11,6 +11,8 @@
 #include <QObject>
 #include <QString>
 
+#include <memory>
+
 using namespace app;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +21,6 @@ class Manager: public QObject
     Q_OBJECT
 public:
     explicit Manager(QString config_path= QString(), QObject* parent= nullptr);
-    ~Manager();
     int run();
 
 signals:
@@ -28,10 +29,10 @@ signals:
 
 private:
     Config config;
-    X11::Server* server= nullptr;
+    std::unique_ptr<x11::server> server;
 
-    QApplication* application= nullptr;
-    pam::context* context= nullptr;
+    std::unique_ptr<QApplication> application;
+    std::unique_ptr<pam::context> context;
 
     QObject* username;
     QObject* password;
@@ -49,7 +50,7 @@ private:
     void set_sessions();
     QString get_session();
 
-    void save_env();
+    void set_environ();
 
     void spawn();
     void spawn_child();

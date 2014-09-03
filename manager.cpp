@@ -222,7 +222,7 @@ void Manager::set_environ()
         context->set("HOME", home);
         context->set("PWD", home);
         context->set("SHELL", shell);
-        context->set("DISPLAY", server->name());
+        context->set("DISPLAY", context->item(pam::item::tty));
         context->set("XAUTHORITY", home+ "/.Xauthority");
     }
     else throw std::runtime_error("No entry for "+ name+ " in the password database");

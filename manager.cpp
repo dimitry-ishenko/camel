@@ -30,13 +30,7 @@ int Manager::run()
 {
     try
     {
-        std::string path= x11::server::default_path;
-        if(config.server_path.size()) path= config.server_path;
-
-        arguments args= x11::server::default_args;
-        if(config.server_args.size()) args= config.server_args;
-
-        server.reset(new x11::server(config.server_auth, x11::server::default_name, path, args));
+        server.reset(new x11::server(config.server_auth, std::string(), config.server_path, config.server_args));
 
         application.reset(new QApplication(server->display()));
         render();

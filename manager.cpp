@@ -61,17 +61,13 @@ int Manager::run()
 
                 QString value= get_session();
                 if(value == "poweroff")
-                {
-                }
+                    poweroff();
                 else if(value == "reboot")
-                {
-                }
+                    reboot();
                 else if(value == "hibernate")
-                {
-                }
+                    hibernate();
                 else if(value == "suspend")
-                {
-                }
+                    suspend();
                 else
                 {
                     context->open_session();
@@ -248,4 +244,28 @@ int Manager::sess_proc(const QString& sess)
 
     this_process::replace_e(e, (config.sessions_path+ "/"+ sess).toStdString());
     return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::poweroff()
+{
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::reboot()
+{
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::hibernate()
+{
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::suspend()
+{
+
 }

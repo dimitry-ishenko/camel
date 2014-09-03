@@ -53,6 +53,11 @@ private:
     void set_environ();
 
     int sess_proc(const QString& sess);
+
+    void poweroff();
+    void reboot();
+    void hibernate();
+    void suspend();
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

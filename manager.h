@@ -19,7 +19,7 @@ class Manager: public QObject
 {
     Q_OBJECT
 public:
-    explicit Manager(QString config_path= QString(), QObject* parent= nullptr);
+    explicit Manager(const QString& config_path= QString(), QObject* parent= nullptr);
     int run();
 
 signals:

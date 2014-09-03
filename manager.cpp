@@ -18,7 +18,7 @@
 #include <stdexcept>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-Manager::Manager(QString config_path, QObject* parent):
+Manager::Manager(const QString& config_path, QObject* parent):
     QObject(parent)
 {
     if(config_path.size()) config.path= config_path;

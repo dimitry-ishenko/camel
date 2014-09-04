@@ -43,7 +43,6 @@ int Manager::run()
         context.set(pam::item::ruser, "root");
         context.set(pam::item::tty, server.name());
 
-        app::process process;
         {
             QApplication application(server.display());
             render(application);
@@ -58,15 +57,6 @@ int Manager::run()
                     context.reset(pam::item::user);
                     context.authenticate();
 
-                    QString sess= get_sess();
-
-                    context.open_session();
-                    store(context);
-
-                    app::process x(&Manager::startup, this, std::ref(context), config.sessions_path+ "/"+ sess);
-                    x.wait_for(std::chrono::seconds(1));
-
-                    std::swap(process, x);
                     break;
                 }
                 catch(pam::pamh_error& e)
@@ -78,6 +68,11 @@ int Manager::run()
                 }
             }
         }
+
+        context.open_session();
+        store(context);
+
+        app::process process(&Manager::startup, this, std::ref(context), get_sess());
         process.join();
 
         context.close_session();
@@ -197,37 +192,30 @@ void Manager::store(pam::context& context)
     passwd* pwd= getpwnam(name.data());
     if(!pwd) throw std::runtime_error("No entry for "+ name+ " in the password database");
 
-    name= pwd->pw_name;
-    std::string shell= pwd->pw_shell;
-    if(shell.empty())
+    context.set("USER", pwd->pw_name);
+    context.set("LOGNAME", pwd->pw_name);
+    context.set("HOME", pwd->pw_dir);
+    if(char* x= getenv("PATH")) context.set("PATH", x);
+    context.set("PWD", pwd->pw_dir);
+    std::string x= pwd->pw_shell;
+    if(x.empty())
     {
         setusershell();
-        shell= getusershell();
+        x= getusershell();
         endusershell();
     }
-    std::string home= pwd->pw_dir;
-    char* path= getenv("PATH");
-    char* term= getenv("TERM");
-
-    context.set("USER", name);
-    context.set("LOGNAME", name);
-    context.set("HOME", home);
-    if(path) context.set("PATH", path);
-    context.set("PWD", home);
-    context.set("SHELL", shell);
-    if(term) context.set("TERM", term);
+    context.set("SHELL", x);
+    if(char* x= getenv("TERM")) context.set("TERM", x);
     context.set("DISPLAY", context.item(pam::item::tty));
-    context.set("XAUTHORITY", home+ "/.Xauthority");
+    context.set("XAUTHORITY", std::string(pwd->pw_dir)+ "/.Xauthority");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int Manager::startup(pam::context& context, const QString& path)
+int Manager::startup(pam::context& context, const QString& sess)
 {
-    environment e= context.environment();
-
     // child: switch user
     // child: set client auth
 
-    this_process::replace_e(e, path.toStdString());
+    this_process::replace_e(context.environment(), (config.sessions_path+ "/"+ sess).toStdString());
     return 0;
 }

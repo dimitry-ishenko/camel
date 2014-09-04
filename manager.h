@@ -46,7 +46,7 @@ private:
     QString get_sess();
 
     void store(pam::context&);
-    int startup(pam::context&, const QString& path);
+    int startup(pam::context&, const QString& sess);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

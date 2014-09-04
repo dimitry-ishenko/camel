@@ -62,9 +62,7 @@ int Manager::run()
                 catch(pam::pamh_error& e)
                 {
                     emit error(e.what());
-
                     std::cerr << e.what() << std::endl;
-                    logger << log::error << e.what();
                 }
             }
         }
@@ -81,7 +79,6 @@ int Manager::run()
     catch(std::exception& e)
     {
         std::cerr << e.what() << std::endl;
-        logger << log::error << e.what();
         return 1;
     }
 }

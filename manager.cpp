@@ -78,7 +78,7 @@ int Manager::run()
         e["PWD"]= c.home;
         e["SHELL"]= c.shell;
         if(char* x= getenv("TERM")) e["TERM"]= x;
-        e["DISPLAY"]= context.get(pam::item::tty);
+        e["DISPLAY"]= server.name();
         e["XAUTHORITY"]= c.home+ "/.Xauthority";
 
         app::process process(true, &Manager::startup, this, std::ref(c), std::ref(e), get_sess());

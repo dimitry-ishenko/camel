@@ -120,10 +120,9 @@ void Manager::render(QApplication& application)
         password= root->findChild<QObject*>("password");
         if(!password) throw std::runtime_error("Missing password element");
 
+        session= root->findChild<QObject*>("session");
         sessions= root->findChild<QObject*>("sessions");
         set_sess();
-
-        session= root->findChild<QObject*>("session");
 
         hostname= root->findChild<QObject*>("hostname");
         if(hostname) hostname->setProperty("text", QHostInfo::localHostName());
@@ -162,18 +161,15 @@ bool Manager::get_pass(std::string& value)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::set_sess()
 {
-    if(sessions)
+    QDir dir(config.sessions_path);
+    if(dir.isReadable())
     {
-        QDir dir(config.sessions_path);
-        if(dir.isReadable())
-        {
-            QStringList files= dir.entryList(QDir::Files);
+        QStringList files= dir.entryList(QDir::Files);
+        if(config.sessions.size()) files= files.toSet().intersect(config.sessions.toSet()).toList();
 
-            if(config.sessions.size())
-                files= files.toSet().intersect(config.sessions.toSet()).toList();
+        if(sessions) sessions->setProperty("text", files);
 
-            sessions->setProperty("text", files);
-        }
+        if(session && files.size()) session->setProperty("text", files[0]);
     }
 }
 
@@ -199,26 +195,29 @@ void Manager::store(pam::context& context)
     std::string name= context.item(pam::item::user);
 
     passwd* pwd= getpwnam(name.data());
-    if(pwd)
-    {
-        std::string name= pwd->pw_name;
-        std::string shell= pwd->pw_shell;
-        if(shell.empty())
-        {
-            setusershell();
-            shell= getusershell();
-            endusershell();
-        }
-        std::string home= pwd->pw_dir;
+    if(!pwd) throw std::runtime_error("No entry for "+ name+ " in the password database");
 
-        context.set("USER", name);
-        context.set("HOME", home);
-        context.set("PWD", home);
-        context.set("SHELL", shell);
-        context.set("DISPLAY", context.item(pam::item::tty));
-        context.set("XAUTHORITY", home+ "/.Xauthority");
+    name= pwd->pw_name;
+    std::string shell= pwd->pw_shell;
+    if(shell.empty())
+    {
+        setusershell();
+        shell= getusershell();
+        endusershell();
     }
-    else throw std::runtime_error("No entry for "+ name+ " in the password database");
+    std::string home= pwd->pw_dir;
+    char* path= getenv("PATH");
+    char* term= getenv("TERM");
+
+    context.set("USER", name);
+    context.set("LOGNAME", name);
+    context.set("HOME", home);
+    if(path) context.set("PATH", path);
+    context.set("PWD", home);
+    context.set("SHELL", shell);
+    if(term) context.set("TERM", term);
+    context.set("DISPLAY", context.item(pam::item::tty));
+    context.set("XAUTHORITY", home+ "/.Xauthority");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

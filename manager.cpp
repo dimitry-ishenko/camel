@@ -184,7 +184,7 @@ QString Manager::get_sess()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::store(pam::context& context)
 {
-    std::string name= context.item(pam::item::user);
+    std::string name= context.get(pam::item::user);
 
     passwd* pwd= getpwnam(name.data());
     if(!pwd) throw std::runtime_error("No entry for "+ name+ " in the password database");
@@ -203,7 +203,7 @@ void Manager::store(pam::context& context)
     }
     context.set("SHELL", x);
     if(char* x= getenv("TERM")) context.set("TERM", x);
-    context.set("DISPLAY", context.item(pam::item::tty));
+    context.set("DISPLAY", context.get(pam::item::tty));
     context.set("XAUTHORITY", std::string(pwd->pw_dir)+ "/.Xauthority");
 }
 

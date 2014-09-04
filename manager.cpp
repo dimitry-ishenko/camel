@@ -70,7 +70,7 @@ int Manager::run()
         context.open_session();
         store(context);
 
-        app::process process(&Manager::startup, this, std::ref(context), get_sess());
+        app::process process(true, &Manager::startup, this, std::ref(context), get_sess());
         process.join();
 
         context.close_session();

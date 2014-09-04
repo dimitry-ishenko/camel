@@ -58,26 +58,16 @@ int Manager::run()
                     context.reset(pam::item::user);
                     context.authenticate();
 
-                    QString value= get_sess();
-                    if(value == "poweroff")
-                        poweroff();
-                    else if(value == "reboot")
-                        reboot();
-                    else if(value == "hibernate")
-                        hibernate();
-                    else if(value == "suspend")
-                        suspend();
-                    else
-                    {
-                        context.open_session();
-                        store(context);
+                    QString sess= get_sess();
 
-                        app::process x(&Manager::startup, this, std::ref(context), config.sessions_path+ "/"+ value);
-                        x.wait_for(std::chrono::seconds(1));
+                    context.open_session();
+                    store(context);
 
-                        std::swap(process, x);
-                        break;
-                    }
+                    app::process x(&Manager::startup, this, std::ref(context), config.sessions_path+ "/"+ sess);
+                    x.wait_for(std::chrono::seconds(1));
+
+                    std::swap(process, x);
+                    break;
                 }
                 catch(pam::pamh_error& e)
                 {
@@ -241,28 +231,4 @@ int Manager::startup(pam::context& context, const QString& path)
 
     this_process::replace_e(e, path.toStdString());
     return 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::poweroff()
-{
-
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::reboot()
-{
-
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::hibernate()
-{
-
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::suspend()
-{
-
 }

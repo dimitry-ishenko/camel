@@ -47,11 +47,6 @@ private:
 
     void store(pam::context&);
     int startup(pam::context&, const QString& path);
-
-    void poweroff();
-    void reboot();
-    void hibernate();
-    void suspend();
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

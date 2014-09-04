@@ -34,4 +34,4 @@ HEADERS += \
     credentials.h       \
 
 OTHER_FILES += \
-    default/theme.qml   \
+    theme/default/theme.qml \

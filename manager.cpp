@@ -4,6 +4,7 @@
 #include "process/process.h"
 #include "pam/pam.h"
 #include "pam/pam_error.h"
+#include "credentials.h"
 #include "log.h"
 
 #include <QApplication>
@@ -18,6 +19,7 @@
 #include <algorithm>
 #include <functional>
 #include <stdexcept>
+#include <cstdlib>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 Manager::Manager(const QString& config_path, QObject* parent):
@@ -68,9 +70,11 @@ int Manager::run()
         }
 
         context.open_session();
-        store(context);
 
-        app::process process(true, &Manager::startup, this, std::ref(context), get_sess());
+        credentials cred= credentials::get(context.get(pam::item::user));
+        store(cred, context);
+
+        app::process process(true, &Manager::startup, this, std::ref(context), std::ref(cred), get_sess());
         process.join();
 
         context.close_session();
@@ -175,42 +179,24 @@ QString Manager::get_sess()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <cstring>
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::store(pam::context& context)
+void Manager::store(credentials& cred, pam::context& context)
 {
-    std::string name= context.get(pam::item::user);
-
-    passwd* pwd= getpwnam(name.data());
-    if(!pwd) throw std::runtime_error("No entry for "+ name+ " in the password database");
-
-    context.set("USER", pwd->pw_name);
-    context.set("LOGNAME", pwd->pw_name);
-    context.set("HOME", pwd->pw_dir);
+    context.set("USER", cred.username);
+    context.set("LOGNAME", cred.username);
+    context.set("HOME", cred.home);
     if(char* x= getenv("PATH")) context.set("PATH", x);
-    context.set("PWD", pwd->pw_dir);
-    std::string x= pwd->pw_shell;
-    if(x.empty())
-    {
-        setusershell();
-        x= getusershell();
-        endusershell();
-    }
-    context.set("SHELL", x);
+    context.set("PWD", cred.home);
+    context.set("SHELL", cred.shell);
     if(char* x= getenv("TERM")) context.set("TERM", x);
     context.set("DISPLAY", context.get(pam::item::tty));
-    context.set("XAUTHORITY", std::string(pwd->pw_dir)+ "/.Xauthority");
+    context.set("XAUTHORITY", cred.home+ "/.Xauthority");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int Manager::startup(pam::context& context, const QString& sess)
+int Manager::startup(pam::context& context, credentials& cred, const QString& sess)
 {
-    // child: switch user
+    cred.morph_into();
+
     // child: set client auth
 
     this_process::replace_e(context.environment(), (config.sessions_path+ "/"+ sess).toStdString());

@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class QApplication;
 namespace app { namespace pam { class context; } }
+namespace app { struct credentials; }
 
 using namespace app;
 
@@ -45,8 +46,8 @@ private:
     void set_sess();
     QString get_sess();
 
-    void store(pam::context&);
-    int startup(pam::context&, const QString& sess);
+    void store(credentials&, pam::context&);
+    int startup(pam::context&, credentials&, const QString& sess);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

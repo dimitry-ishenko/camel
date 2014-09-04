@@ -4,13 +4,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "config.h"
-#include "pam/pam.h"
 
-#include <QApplication>
 #include <QObject>
 #include <QString>
 
-#include <memory>
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class QApplication;
+namespace app { namespace pam { class context; } }
 
 using namespace app;
 
@@ -29,9 +29,6 @@ signals:
 private:
     Config config;
 
-    std::unique_ptr<QApplication> application;
-    std::unique_ptr<pam::context> context;
-
     QObject* username;
     QObject* password;
 
@@ -40,17 +37,16 @@ private:
 
     QObject* hostname;
 
-    void render();
+    void render(QApplication&);
 
     bool get_user(std::string&);
     bool get_pass(std::string&);
 
-    void set_sessions();
-    QString get_session();
+    void set_sess();
+    QString get_sess();
 
-    void set_environ();
-
-    int sess_proc(const QString& sess);
+    void store(pam::context&);
+    int startup(pam::context&, const QString& path);
 
     void poweroff();
     void reboot();

@@ -2,9 +2,11 @@
 #include "manager.h"
 #include "x11.h"
 #include "process/process.h"
+#include "pam/pam.h"
 #include "pam/pam_error.h"
 #include "log.h"
 
+#include <QApplication>
 #include <QtDeclarative/QDeclarativeView>
 #include <QDesktopWidget>
 #include <QGraphicsObject>
@@ -33,61 +35,62 @@ int Manager::run()
     {
         x11::server server(config.server_auth, std::string(), config.server_path, config.server_args);
 
-        application.reset(new QApplication(server.display()));
-        render();
+        pam::context context(config.service);
 
-        context.reset(new pam::context(config.service));
+        context.set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
+        context.set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
 
-        context->set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
-        context->set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
+        context.set(pam::item::ruser, "root");
+        context.set(pam::item::tty, server.name());
 
-        context->set(pam::item::ruser, "root");
-        context->set(pam::item::tty, server.name());
-
-        while(true)
+        app::process process;
         {
-            emit reset();
-            application->exec();
+            QApplication application(server.display());
+            render(application);
 
-            try
+            while(true)
             {
-                context->reset(pam::item::user);
-                context->authenticate();
+                emit reset();
+                application.exec();
 
-                QString value= get_session();
-                if(value == "poweroff")
-                    poweroff();
-                else if(value == "reboot")
-                    reboot();
-                else if(value == "hibernate")
-                    hibernate();
-                else if(value == "suspend")
-                    suspend();
-                else
+                try
                 {
-                    context->open_session();
-                    set_environ();
+                    context.reset(pam::item::user);
+                    context.authenticate();
 
-                    process sess(&Manager::sess_proc, this, value);
-                    sess.join();
+                    QString value= get_sess();
+                    if(value == "poweroff")
+                        poweroff();
+                    else if(value == "reboot")
+                        reboot();
+                    else if(value == "hibernate")
+                        hibernate();
+                    else if(value == "suspend")
+                        suspend();
+                    else
+                    {
+                        context.open_session();
+                        store(context);
 
-                    context->close_session();
+                        app::process x(&Manager::startup, this, std::ref(context), config.sessions_path+ "/"+ value);
+                        x.wait_for(std::chrono::seconds(1));
+
+                        std::swap(process, x);
+                        break;
+                    }
                 }
+                catch(pam::pamh_error& e)
+                {
+                    emit error(e.what());
 
-                break;
-            }
-            catch(pam::pam_error& e)
-            {
-                emit error(e.what());
-
-                std::cerr << e.what() << std::endl;
-                logger << log::error << e.what();
+                    std::cerr << e.what() << std::endl;
+                    logger << log::error << e.what();
+                }
             }
         }
+        process.join();
 
-        context.reset();
-        application.reset();
-
+        context.close_session();
         return 0;
     }
     catch(std::exception& e)
@@ -99,7 +102,7 @@ int Manager::run()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::render()
+void Manager::render(QApplication& application)
 {
     QString current= QDir::currentPath();
     try
@@ -112,14 +115,14 @@ void Manager::render()
         if(!QFile::exists(config.theme_file))
             throw std::runtime_error("Theme file "+ config.theme_file.toStdString()+ " not found");
 
-        QDeclarativeView* view= new QDeclarativeView(QUrl::fromLocalFile(config.theme_file), application->desktop());
-        view->setGeometry(application->desktop()->screenGeometry());
+        QDeclarativeView* view= new QDeclarativeView(QUrl::fromLocalFile(config.theme_file), application.desktop());
+        view->setGeometry(application.desktop()->screenGeometry());
         view->show();
 
         QGraphicsObject* root= view->rootObject();
         connect(this, SIGNAL(reset()), root, SIGNAL(reset()));
         connect(this, SIGNAL(error(QString)), root, SIGNAL(error(QString)));
-        connect(root, SIGNAL(quit()), application.get(), SLOT(quit()));
+        connect(root, SIGNAL(quit()), &application, SLOT(quit()));
 
         username= root->findChild<QObject*>("username");
         if(!username) throw std::runtime_error("Missing username element");
@@ -128,7 +131,7 @@ void Manager::render()
         if(!password) throw std::runtime_error("Missing password element");
 
         sessions= root->findChild<QObject*>("sessions");
-        set_sessions();
+        set_sess();
 
         session= root->findChild<QObject*>("session");
 
@@ -167,7 +170,7 @@ bool Manager::get_pass(std::string& value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::set_sessions()
+void Manager::set_sess()
 {
     if(sessions)
     {
@@ -185,7 +188,7 @@ void Manager::set_sessions()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-QString Manager::get_session()
+QString Manager::get_sess()
 {
     QString value;
     if(session) value= session->property("text").toString();
@@ -201,9 +204,9 @@ QString Manager::get_session()
 #include <pwd.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::set_environ()
+void Manager::store(pam::context& context)
 {
-    std::string name= context->item(pam::item::user);
+    std::string name= context.item(pam::item::user);
 
     passwd* pwd= getpwnam(name.data());
     if(pwd)
@@ -218,25 +221,25 @@ void Manager::set_environ()
         }
         std::string home= pwd->pw_dir;
 
-        context->set("USER", name);
-        context->set("HOME", home);
-        context->set("PWD", home);
-        context->set("SHELL", shell);
-        context->set("DISPLAY", context->item(pam::item::tty));
-        context->set("XAUTHORITY", home+ "/.Xauthority");
+        context.set("USER", name);
+        context.set("HOME", home);
+        context.set("PWD", home);
+        context.set("SHELL", shell);
+        context.set("DISPLAY", context.item(pam::item::tty));
+        context.set("XAUTHORITY", home+ "/.Xauthority");
     }
     else throw std::runtime_error("No entry for "+ name+ " in the password database");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int Manager::sess_proc(const QString& sess)
+int Manager::startup(pam::context& context, const QString& path)
 {
-    environment e= context->environment();
+    environment e= context.environment();
 
     // child: switch user
     // child: set client auth
 
-    this_process::replace_e(e, (config.sessions_path+ "/"+ sess).toStdString());
+    this_process::replace_e(e, path.toStdString());
     return 0;
 }
 

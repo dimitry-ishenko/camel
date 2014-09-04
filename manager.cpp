@@ -1,10 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
 #include "x11.h"
-#include "process/process.h"
 #include "pam/pam.h"
 #include "pam/pam_error.h"
-#include "credentials.h"
 #include "log.h"
 
 #include <QApplication>
@@ -19,7 +17,6 @@
 #include <algorithm>
 #include <functional>
 #include <stdexcept>
-#include <cstdlib>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 Manager::Manager(const QString& config_path, QObject* parent):
@@ -71,10 +68,20 @@ int Manager::run()
 
         context.open_session();
 
-        credentials cred= credentials::get(context.get(pam::item::user));
-        store(cred, context);
+        credentials c= credentials::get(context.get(pam::item::user));
+        environment e;
 
-        app::process process(true, &Manager::startup, this, std::ref(context), std::ref(cred), get_sess());
+        e["USER"]= c.username;
+        e["LOGNAME"]= c.username;
+        e["HOME"]= c.home;
+        if(char* x= getenv("PATH")) e["PATH"]= x;
+        e["PWD"]= c.home;
+        e["SHELL"]= c.shell;
+        if(char* x= getenv("TERM")) e["TERM"]= x;
+        e["DISPLAY"]= context.get(pam::item::tty);
+        e["XAUTHORITY"]= c.home+ "/.Xauthority";
+
+        app::process process(true, &Manager::startup, this, std::ref(c), std::ref(e), get_sess());
         process.join();
 
         context.close_session();
@@ -179,26 +186,12 @@ QString Manager::get_sess()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::store(credentials& cred, pam::context& context)
+int Manager::startup(credentials& c, environment& e, const QString &sess)
 {
-    context.set("USER", cred.username);
-    context.set("LOGNAME", cred.username);
-    context.set("HOME", cred.home);
-    if(char* x= getenv("PATH")) context.set("PATH", x);
-    context.set("PWD", cred.home);
-    context.set("SHELL", cred.shell);
-    if(char* x= getenv("TERM")) context.set("TERM", x);
-    context.set("DISPLAY", context.get(pam::item::tty));
-    context.set("XAUTHORITY", cred.home+ "/.Xauthority");
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-int Manager::startup(pam::context& context, credentials& cred, const QString& sess)
-{
-    cred.morph_into();
+    c.morph_into();
 
     // child: set client auth
 
-    this_process::replace_e(context.environment(), (config.sessions_path+ "/"+ sess).toStdString());
+    this_process::replace_e(e, (config.sessions_path+ "/"+ sess).toStdString());
     return 0;
 }

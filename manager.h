@@ -4,14 +4,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "config.h"
+#include "process/process.h"
+#include "credentials.h"
 
 #include <QObject>
 #include <QString>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class QApplication;
-namespace app { namespace pam { class context; } }
-namespace app { struct credentials; }
 
 using namespace app;
 
@@ -46,8 +46,7 @@ private:
     void set_sess();
     QString get_sess();
 
-    void store(credentials&, pam::context&);
-    int startup(pam::context&, credentials&, const QString& sess);
+    int startup(credentials&, environment&, const QString& sess);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

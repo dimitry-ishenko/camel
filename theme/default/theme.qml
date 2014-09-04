@@ -99,7 +99,7 @@ Image {
                     property: "opacity"
                     from: 1
                     to: 1
-                    duration: 6000
+                    duration: 4000
                 }
 
                 PropertyAnimation {
@@ -107,7 +107,7 @@ Image {
                     property: "opacity"
                     from: 1
                     to: 0
-                    duration: 600
+                    duration: 400
                     easing.type: Easing.InQuad
                 }
             }

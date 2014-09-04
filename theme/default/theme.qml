@@ -18,7 +18,30 @@ Image {
     }
 
     onError: {
+        animation.stop()
         error.text = message
+        animation.start()
+    }
+
+    SequentialAnimation {
+        id: animation
+
+        PropertyAction {
+            target: error
+            property: "opacity"
+            value: 1
+        }
+        PauseAnimation {
+            duration: 4000
+        }
+        PropertyAnimation {
+            target: error
+            property: "opacity"
+            from: 1
+            to: 0
+            duration: 400
+            easing.type: Easing.InQuad
+        }
     }
 
     Item {
@@ -92,25 +115,6 @@ Image {
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             clip: true
-
-            onTextChanged: SequentialAnimation {
-                PropertyAnimation {
-                    target: error
-                    property: "opacity"
-                    from: 1
-                    to: 1
-                    duration: 4000
-                }
-
-                PropertyAnimation {
-                    target: error
-                    property: "opacity"
-                    from: 1
-                    to: 0
-                    duration: 400
-                    easing.type: Easing.InQuad
-                }
-            }
 
             Text {
                 anchors.fill: parent

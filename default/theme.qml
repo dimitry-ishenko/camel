@@ -93,6 +93,25 @@ Image {
             horizontalAlignment: Text.AlignHCenter
             clip: true
 
+            onTextChanged: SequentialAnimation {
+                PropertyAnimation {
+                    target: error
+                    property: "opacity"
+                    from: 1
+                    to: 1
+                    duration: 6000
+                }
+
+                PropertyAnimation {
+                    target: error
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 600
+                    easing.type: Easing.InQuad
+                }
+            }
+
             Text {
                 anchors.fill: parent
                 anchors.topMargin: 2

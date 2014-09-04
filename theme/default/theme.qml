@@ -35,7 +35,7 @@ Image {
 
     Rectangle {
         id: panel
-        width: 400
+        width: 380
         height: 180
         radius: 5
         color: "#30ffffff"
@@ -50,7 +50,7 @@ Image {
             width: 260
             height: 40
             anchors.top: parent.top
-            anchors.topMargin: 20
+            anchors.topMargin: 16
             anchors.horizontalCenter: parent.horizontalCenter
 
             font.family: "Linux Biolinum"
@@ -120,7 +120,7 @@ Image {
 
                 text: parent.text
                 font: parent.font
-                color: "#60000000"
+                color: "#50000000"
                 verticalAlignment: parent.verticalAlignment
                 horizontalAlignment: parent.horizontalAlignment
                 clip: true
@@ -129,7 +129,7 @@ Image {
 
         Item {
             id: username_area
-            height: 30
+            height: 26
             anchors.verticalCenter: parent.verticalCenter;
             anchors.left: parent.left
             anchors.leftMargin: 40
@@ -180,7 +180,10 @@ Image {
                     id: username
                     objectName: "username"
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
+                    anchors.topMargin: 2
+                    anchors.bottomMargin: 2
                     font.family: "Terminus"
                     font.pointSize: 16
 
@@ -194,7 +197,7 @@ Image {
             id: password_area
             height: username_area.height
             anchors.top: username_area.bottom
-            anchors.topMargin: 10
+            anchors.topMargin: 16
             anchors.left: username_area.left
             anchors.right: username_area.right
 
@@ -242,7 +245,10 @@ Image {
                     id: password
                     objectName: "password"
                     anchors.fill: parent
-                    anchors.margins: username.anchors.margins
+                    anchors.leftMargin: username.anchors.leftMargin
+                    anchors.rightMargin: username.anchors.rightMargin
+                    anchors.topMargin: username.anchors.topMargin
+                    anchors.bottomMargin: username.anchors.bottomMargin
                     font: username.font
 
                     echoMode: TextInput.Password

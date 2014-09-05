@@ -1,15 +1,18 @@
 import QtQuick 1.1
 
 Image {
+    ////////////////////////////////////////
     id: background
     source: "background.jpg"
     fillMode: Image.PreserveAspectCrop
     clip: true
 
+    ////////////////////////////////////////
     signal reset()
-    signal error(string message)
+    signal message(string text, string color)
     signal quit()
 
+    ////////////////////////////////////////
     onReset: {
         username.text = ""
         password.text = ""
@@ -17,9 +20,11 @@ Image {
         username.focus = true
     }
 
-    onError: {
+    ////////////////////////////////////////
+    onMessage: {
         animation.stop()
-        error.text = message
+        message.color = color
+        message.text = text
         animation.start()
     }
 
@@ -27,35 +32,38 @@ Image {
         id: animation
 
         PropertyAction {
-            target: error
+            target: message
             property: "opacity"
             value: 1
         }
         PauseAnimation {
-            duration: 4000
+            duration: 3000
         }
         PropertyAnimation {
-            target: error
+            target: message
             property: "opacity"
             from: 1
             to: 0
-            duration: 400
+            duration: 300
             easing.type: Easing.InQuad
         }
     }
 
+    ////////////////////////////////////////
     Item {
         id: sessions
         objectName: "sessions"
         property variant text: [ ]
     }
 
+    ////////////////////////////////////////
     Item {
         id: session
         objectName: "session"
         property string text: ""
     }
 
+    ////////////////////////////////////////
     Rectangle {
         id: panel
         width: 380
@@ -67,6 +75,7 @@ Image {
         anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
 
+        ////////////////////////////////////////
         Text {
             id: hostname
             objectName: "hostname"
@@ -99,8 +108,9 @@ Image {
             }
         }
 
+        ////////////////////////////////////////
         Text {
-            id: error
+            id: message
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 10
             height: 20
@@ -111,7 +121,6 @@ Image {
 
             font.family: "Terminus"
             font.pointSize: 14
-            color: "red"
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             clip: true
@@ -124,13 +133,14 @@ Image {
 
                 text: parent.text
                 font: parent.font
-                color: "#50000000"
+                color: "#60000000"
                 verticalAlignment: parent.verticalAlignment
                 horizontalAlignment: parent.horizontalAlignment
                 clip: true
             }
         }
 
+        ////////////////////////////////////////
         Item {
             id: username_area
             height: 26
@@ -197,6 +207,7 @@ Image {
             }
         }
 
+        ////////////////////////////////////////
         Item {
             id: password_area
             height: username_area.height

@@ -53,12 +53,25 @@ int Manager::run()
 
                 try
                 {
-                    context.reset(pam::item::user);
-                    context.authenticate();
+                    QString sess= get_sess();
+                    if(sess == "reboot")
+                        this_process::execute(config.reboot);
+                    else if(sess == "poweroff")
+                        this_process::execute(config.poweroff);
+                    else
+                    {
+                        context.reset(pam::item::user);
+                        context.authenticate();
 
-                    break;
+                        break;
+                    }
                 }
                 catch(pam::pamh_error& e)
+                {
+                    emit error(e.what());
+                    std::cerr << e.what() << std::endl;
+                }
+                catch(execute_error& e)
                 {
                     emit error(e.what());
                     std::cerr << e.what() << std::endl;

@@ -73,10 +73,12 @@ Image {
         }
         else if(event.key === Qt.Key_F10) {
             session.text = "reboot"
+            info("Rebooting")
             quit()
         }
         else if(event.key === Qt.Key_F11) {
             session.text = "poweroff"
+            info("Powering off")
             quit()
         }
     }

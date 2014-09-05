@@ -134,7 +134,9 @@ Image {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 anchors.right: username_panel.left
-                anchors.margins: username.anchors.margins
+                anchors.topMargin: username.anchors.topMargin
+                anchors.bottomMargin: username.anchors.bottomMargin
+                anchors.leftMargin: username.anchors.leftMargin
                 anchors.rightMargin: 10
 
                 text: "username"
@@ -158,10 +160,10 @@ Image {
                     id: username
                     objectName: "username"
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
                     anchors.topMargin: 2
                     anchors.bottomMargin: 2
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
                     font.family: "Terminus"
                     font.pointSize: 16
 
@@ -186,7 +188,9 @@ Image {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 anchors.right: password_panel.left
-                anchors.margins: password.anchors.margins
+                anchors.topMargin: password.anchors.topMargin
+                anchors.bottomMargin: password.anchors.bottomMargin
+                anchors.leftMargin: password.anchors.leftMargin
                 anchors.rightMargin: 10
 
                 text: "password"
@@ -210,10 +214,10 @@ Image {
                     id: password
                     objectName: "password"
                     anchors.fill: parent
-                    anchors.leftMargin: username.anchors.leftMargin
-                    anchors.rightMargin: username.anchors.rightMargin
                     anchors.topMargin: username.anchors.topMargin
                     anchors.bottomMargin: username.anchors.bottomMargin
+                    anchors.leftMargin: username.anchors.leftMargin
+                    anchors.rightMargin: username.anchors.rightMargin
                     font: username.font
 
                     echoMode: TextInput.Password

@@ -25,7 +25,7 @@ public:
 
 signals:
     void reset();
-    void message(const QString& text, const QString& color);
+    void error(const QString& text);
 
 private:
     Config config;

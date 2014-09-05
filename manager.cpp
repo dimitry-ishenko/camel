@@ -60,7 +60,7 @@ int Manager::run()
                 }
                 catch(pam::pamh_error& e)
                 {
-                    emit message(e.what(), "red");
+                    emit error(e.what());
                     std::cerr << e.what() << std::endl;
                 }
             }
@@ -114,7 +114,7 @@ void Manager::render(QApplication& application)
 
         QGraphicsObject* root= view->rootObject();
         connect(this, SIGNAL(reset()), root, SIGNAL(reset()));
-        connect(this, SIGNAL(message(QString,QString)), root, SIGNAL(message(QString,QString)));
+        connect(this, SIGNAL(error(QString)), root, SIGNAL(error(QString)));
         connect(root, SIGNAL(quit()), &application, SLOT(quit()));
 
         username= root->findChild<QObject*>("username");

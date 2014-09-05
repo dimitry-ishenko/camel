@@ -9,6 +9,8 @@ Image {
 
     ////////////////////////////////////////
     signal reset()
+    signal info(string text)
+    signal error(string text)
     signal message(string text, string color)
     signal quit()
 
@@ -19,6 +21,10 @@ Image {
 
         username.focus = true
     }
+
+    ////////////////////////////////////////
+    onInfo: message(text, "white")
+    onError: message(text, "red")
 
     ////////////////////////////////////////
     onMessage: {
@@ -92,20 +98,6 @@ Image {
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             clip: true
-
-            Text {
-                anchors.fill: parent
-                anchors.topMargin: 2
-                anchors.leftMargin: 2
-                z: -1
-
-                text: parent.text
-                font: parent.font
-                color: "#60000000"
-                verticalAlignment: parent.verticalAlignment
-                horizontalAlignment: parent.horizontalAlignment
-                clip: true
-            }
         }
 
         ////////////////////////////////////////
@@ -124,20 +116,6 @@ Image {
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             clip: true
-
-            Text {
-                anchors.fill: parent
-                anchors.topMargin: 2
-                anchors.leftMargin: 2
-                z: -1
-
-                text: parent.text
-                font: parent.font
-                color: "#60000000"
-                verticalAlignment: parent.verticalAlignment
-                horizontalAlignment: parent.horizontalAlignment
-                clip: true
-            }
         }
 
         ////////////////////////////////////////
@@ -165,20 +143,6 @@ Image {
                 verticalAlignment: Text.AlignTop
                 horizontalAlignment: Text.AlignRight
                 clip: true
-
-                Text {
-                    anchors.fill: parent
-                    anchors.topMargin: 1
-                    anchors.rightMargin: -1
-                    z: -1
-
-                    text: parent.text
-                    font: parent.font
-                    color: "#60000000"
-                    verticalAlignment: parent.verticalAlignment
-                    horizontalAlignment: parent.horizontalAlignment
-                    clip: true
-                }
             }
 
             Rectangle {
@@ -231,20 +195,6 @@ Image {
                 verticalAlignment: username_label.verticalAlignment
                 horizontalAlignment: username_label.horizontalAlignment
                 clip: true
-
-                Text {
-                    anchors.fill: parent
-                    anchors.topMargin: 1
-                    anchors.rightMargin: -1
-                    z: -1
-
-                    text: parent.text
-                    font: parent.font
-                    color: "#60000000"
-                    verticalAlignment: parent.verticalAlignment
-                    horizontalAlignment: parent.horizontalAlignment
-                    clip: true
-                }
             }
 
             Rectangle {

@@ -26,6 +26,9 @@ struct Config
     QString sessions_path= "/etc/X11/Sessions";
     QStringList sessions;
 
+    std::string reboot= "/sbin/reboot";
+    std::string poweroff= "/sbin/poweroff";
+
     // theme settings
     QString theme_path= "/usr/share/camel/theme";
     QString theme_name= "default";

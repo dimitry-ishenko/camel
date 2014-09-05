@@ -11,7 +11,7 @@ Image {
     signal reset()
     signal info(string text)
     signal error(string text)
-    signal message(string text, string color)
+    signal message(string text, color color)
     signal quit()
 
     ////////////////////////////////////////
@@ -23,14 +23,14 @@ Image {
     }
 
     ////////////////////////////////////////
-    onInfo: message(text, "white")
-    onError: message(text, "red")
+    onInfo: message(text, "#555555")
+    onError: message(text, "#ff0000")
 
     ////////////////////////////////////////
     onMessage: {
         animation.stop()
-        message.color = color
-        message.text = text
+        animation_color.value = color
+        message_label.text = text
         animation.start()
     }
 
@@ -38,15 +38,21 @@ Image {
         id: animation
 
         PropertyAction {
-            target: message
+            id: animation_color
+            target: message_label
+            property: "color"
+            value: "white"
+        }
+        PropertyAction {
+            target: message_label
             property: "opacity"
             value: 1
         }
         PauseAnimation {
-            duration: 3000
+            duration: 4000
         }
         PropertyAnimation {
-            target: message
+            target: message_label
             property: "opacity"
             from: 1
             to: 0
@@ -56,10 +62,31 @@ Image {
     }
 
     ////////////////////////////////////////
+    Keys.onPressed: {
+        if(event.key === Qt.Key_F1)
+            info("F8 session F10 reboot F11 poweroff")
+        else if(event.key === Qt.Key_F8) {
+            ++sessions.index
+            if(sessions.index >= sessions.text.length)
+                sessions.index = 0
+            session.text = sessions.text[sessions.index]
+        }
+        else if(event.key === Qt.Key_F10) {
+            session.text = "reboot"
+            quit()
+        }
+        else if(event.key === Qt.Key_F11) {
+            session.text = "poweroff"
+            quit()
+        }
+    }
+
+    ////////////////////////////////////////
     Item {
         id: sessions
         objectName: "sessions"
         property variant text: [ ]
+        property int index: 0
     }
 
     ////////////////////////////////////////
@@ -67,6 +94,8 @@ Image {
         id: session
         objectName: "session"
         property string text: ""
+
+        onTextChanged: info(text)
     }
 
     ////////////////////////////////////////
@@ -102,7 +131,7 @@ Image {
 
         ////////////////////////////////////////
         Text {
-            id: message
+            id: message_label
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 10
             height: 20

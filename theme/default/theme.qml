@@ -3,7 +3,7 @@ import QtQuick 1.1
 Image {
     ////////////////////////////////////////
     id: background
-    source: "background.jpg"
+    source: "background.png"
     fillMode: Image.PreserveAspectCrop
     clip: true
 
@@ -106,7 +106,7 @@ Image {
         width: 380
         height: 180
         radius: 5
-        color: "#30ffffff"
+        color: "#30888888"
         border.color: "#a0e0e0e0"
         anchors.verticalCenterOffset: 80
         anchors.verticalCenter: parent.verticalCenter

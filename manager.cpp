@@ -81,7 +81,7 @@ int Manager::run()
 
         context.open_session();
 
-        credentials c= credentials::get(context.get(pam::item::user));
+        credentials c(context.get(pam::item::user));
         environment e;
 
         e["USER"]= c.username;

@@ -28,6 +28,7 @@ HEADERS += \
     lib/pam/pam_error.h     \
     lib/pam/pam_type.h      \
     lib/basic_filebuf.h     \
+    lib/stdio_filebuf.h     \
     lib/process/process.h   \
     lib/x11/server.h        \
     src/config.h            \

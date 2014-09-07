@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
-#include "x11.h"
+#include "x11/server.h"
 #include "pam/pam.h"
 #include "pam/pam_error.h"
 #include "log.h"

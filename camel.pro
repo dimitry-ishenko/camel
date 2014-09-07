@@ -5,33 +5,33 @@ QT += core gui declarative
 TARGET       = camel
 TEMPLATE     = app
 
-INCLUDEPATH  =
+INCLUDEPATH  = ./lib ./src
 LIBS         = -lc++ -lX11 -lpam
 
 QMAKE_CXX    = clang++
 QMAKE_CXXFLAGS = -std=c++11 -stdlib=libc++
 
 ##############################
-SOURCES += main.cpp     \
-    log.cpp             \
-    x11.cpp             \
-    config.cpp          \
-    manager.cpp         \
-    pam/pam.cpp         \
-    process/process.cpp \
-    credentials.cpp     \
+SOURCES += src/main.cpp     \
+    lib/log.cpp             \
+    lib/x11.cpp             \
+    lib/pam/pam.cpp         \
+    lib/process/process.cpp \
+    src/config.cpp          \
+    src/credentials.cpp     \
+    src/manager.cpp         \
 
 HEADERS += \
-    log.h               \
-    x11.h               \
-    config.h            \
-    manager.h           \
-    pam/pam.h           \
-    pam/pam_error.h     \
-    pam/pam_type.h      \
-    errno_error.h       \
-    process/process.h   \
-    credentials.h       \
+    lib/errno_error.h       \
+    lib/log.h               \
+    lib/x11.h               \
+    lib/pam/pam.h           \
+    lib/pam/pam_error.h     \
+    lib/pam/pam_type.h      \
+    lib/process/process.h   \
+    src/config.h            \
+    src/credentials.h       \
+    src/manager.h           \
 
 OTHER_FILES += \
     theme/default/theme.qml \

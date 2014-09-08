@@ -32,7 +32,7 @@ int Manager::run()
 {
     try
     {
-        x11::server server(config.server_auth, std::string(), config.server_path, config.server_args);
+        x11::server server(config.server_auth);
 
         pam::context context(config.service);
 

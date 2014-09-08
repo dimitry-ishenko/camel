@@ -94,7 +94,7 @@ int Manager::run()
         e["DISPLAY"]= server.name();
         e["XAUTHORITY"]= c.home+ "/.Xauthority";
 
-        app::process process(true, &Manager::startup, this, std::ref(c), std::ref(e), get_sess());
+        app::process process(process::group, &Manager::startup, this, std::ref(c), std::ref(e), get_sess());
         process.join();
 
         context.close_session();

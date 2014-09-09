@@ -14,6 +14,7 @@ QMAKE_CXXFLAGS = -std=c++11 -stdlib=libc++
 ##############################
 SOURCES += src/main.cpp     \
     lib/log.cpp             \
+    lib/utility.cpp         \
     lib/pam/pam.cpp         \
     lib/process/process.cpp \
     lib/x11/server.cpp      \
@@ -24,6 +25,7 @@ SOURCES += src/main.cpp     \
 HEADERS += \
     lib/errno_error.h       \
     lib/log.h               \
+    lib/utility.h           \
     lib/pam/pam.h           \
     lib/pam/pam_error.h     \
     lib/pam/pam_type.h      \

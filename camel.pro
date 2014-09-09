@@ -16,6 +16,7 @@ SOURCES += src/main.cpp     \
     lib/log.cpp             \
     lib/utility.cpp         \
     lib/pam/pam.cpp         \
+    lib/environ.cpp         \
     lib/process/process.cpp \
     lib/x11/server.cpp      \
     src/config.cpp          \

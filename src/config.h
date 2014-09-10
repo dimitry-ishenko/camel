@@ -3,11 +3,11 @@
 #define CONFIG_H
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+#include "arguments.h"
+
 #include <QStringList>
 #include <QString>
-
 #include <string>
-#include <vector>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct Config
@@ -15,10 +15,12 @@ struct Config
     QString path= "/etc/camel.conf";
 
     // X server settings
-    std::string server_auth= "/run/camel.auth";
+    std::string xorg_name;
+    app::arguments xorg_args= { "-br", "-novtswitch", "-nolisten", "tcp", "-quiet" };
+    std::string xorg_auth= "/run/camel.auth";
 
     // PAM settings
-    std::string service= "camel";
+    std::string pam_service= "camel";
 
     // session settings
     QString sessions_path= "/etc/X11/Sessions";

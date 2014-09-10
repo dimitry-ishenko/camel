@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
-#include "x11/server.h"
-#include "pam/pam.h"
+#include "credentials.h"
 #include "pam/pam_error.h"
+#include "environ.h"
 #include "log.h"
 
 #include <QApplication>
@@ -81,29 +81,7 @@ int Manager::run()
 
         context.open_session();
 
-        credentials c(context.get(pam::item::user));
-        app::environ e;
-
-        bool found;
-        std::string value;
-
-        e.set("USER", c.username);
-        e.set("LOGNAME", c.username);
-        e.set("HOME", c.home);
-
-        value= this_environ::get("PATH", &found);
-        if(found) e.set("PATH", value);
-
-        e.set("PWD", c.home);
-        e.set("SHELL", c.shell);
-
-        value= this_environ::get("TERM", &found);
-        if(found) e.set("TERM", value);
-
-        e.set("DISPLAY", server.name());
-        e.set("XAUTHORITY", c.home+ "/.Xauthority");
-
-        app::process process(process::group, &Manager::startup, this, std::ref(c), std::ref(e), get_sess());
+        app::process process(process::group, &Manager::startup, this, std::ref(context), std::ref(server), get_sess());
         process.join();
 
         context.close_session();
@@ -208,11 +186,34 @@ QString Manager::get_sess()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int Manager::startup(credentials& c, app::environ& e, const QString &sess)
+int Manager::startup(pam::context& context, x11::server& server, const QString& sess)
 {
-    c.morph_into();
+    credentials c(context.get(pam::item::user));
+    app::environ e;
 
-    // child: set client auth
+    std::string auth= c.home+ "/.Xauthority";
+
+    bool found;
+    std::string value;
+
+    e.set("USER", c.username);
+    e.set("LOGNAME", c.username);
+    e.set("HOME", c.home);
+
+    value= this_environ::get("PATH", &found);
+    if(found) e.set("PATH", value);
+
+    e.set("PWD", c.home);
+    e.set("SHELL", c.shell);
+
+    value= this_environ::get("TERM", &found);
+    if(found) e.set("TERM", value);
+
+    e.set("DISPLAY", context.get(pam::item::tty));
+    e.set("XAUTHORITY", auth);
+
+    c.morph_into();
+    server.set_cookie(auth);
 
     this_process::replace_e(e, (config.sessions_path+ "/"+ sess).toStdString());
     return 0;

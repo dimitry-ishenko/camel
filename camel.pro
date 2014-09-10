@@ -27,6 +27,7 @@ HEADERS += \
     lib/errno_error.h       \
     lib/log.h               \
     lib/utility.h           \
+    lib/wrapper.h           \
     lib/pam/pam.h           \
     lib/pam/pam_error.h     \
     lib/pam/pam_type.h      \

@@ -18,10 +18,11 @@
 #include <functional>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-Manager::Manager(const QString& config_path, QObject* parent):
+Manager::Manager(const QString& name, const QString& path, QObject* parent):
     QObject(parent)
 {
-    if(config_path.size()) config.path= config_path;
+    if(name.size()) config.xorg_name= name.toStdString();
+    if(path.size()) config.path= path;
     config.parse();
 
     if(config.xorg_name.empty()) config.xorg_name= x11::server::default_name;

@@ -82,17 +82,26 @@ int Manager::run()
         context.open_session();
 
         credentials c(context.get(pam::item::user));
-        environment e;
+        app::environ e;
 
-        e["USER"]= c.username;
-        e["LOGNAME"]= c.username;
-        e["HOME"]= c.home;
-        if(char* x= getenv("PATH")) e["PATH"]= x;
-        e["PWD"]= c.home;
-        e["SHELL"]= c.shell;
-        if(char* x= getenv("TERM")) e["TERM"]= x;
-        e["DISPLAY"]= server.name();
-        e["XAUTHORITY"]= c.home+ "/.Xauthority";
+        bool found;
+        std::string value;
+
+        e.set("USER", c.username);
+        e.set("LOGNAME", c.username);
+        e.set("HOME", c.home);
+
+        value= this_environ::get("PATH", &found);
+        if(found) e.set("PATH", value);
+
+        e.set("PWD", c.home);
+        e.set("SHELL", c.shell);
+
+        value= this_environ::get("TERM", &found);
+        if(found) e.set("TERM", value);
+
+        e.set("DISPLAY", server.name());
+        e.set("XAUTHORITY", c.home+ "/.Xauthority");
 
         app::process process(process::group, &Manager::startup, this, std::ref(c), std::ref(e), get_sess());
         process.join();
@@ -199,7 +208,7 @@ QString Manager::get_sess()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int Manager::startup(credentials& c, environment& e, const QString &sess)
+int Manager::startup(credentials& c, app::environ& e, const QString &sess)
 {
     c.morph_into();
 

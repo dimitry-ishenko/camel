@@ -4,8 +4,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "config.h"
-#include "process/process.h"
 #include "credentials.h"
+#include "environ.h"
 
 #include <QObject>
 #include <QString>
@@ -46,7 +46,7 @@ private:
     void set_sess();
     QString get_sess();
 
-    int startup(credentials&, environment&, const QString& sess);
+    int startup(credentials&, app::environ&, const QString& sess);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

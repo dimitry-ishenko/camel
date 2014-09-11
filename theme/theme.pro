@@ -20,3 +20,21 @@ OTHER_FILES += \
     elarun/background.png           \
     elarun/sessions.png             \
     elarun/theme.qml                \
+
+########################################
+OTHER_FILES += \
+    ariya/user_icon.png             \
+    ariya/system_normal.png         \
+    ariya/sessions.png              \
+    ariya/session_normal.png        \
+    ariya/rectangle_overlay.png     \
+    ariya/rectangle.png             \
+    ariya/pw_icon.png               \
+    ariya/login_normal.png          \
+    ariya/login_active.png          \
+    ariya/lock.png                  \
+    ariya/lineedit_normal.png       \
+    ariya/lineedit_active.png       \
+    ariya/COPYRIGHT                 \
+    ariya/background.png            \
+    ariya/theme.qml                 \

@@ -14,7 +14,6 @@
 #include <QFile>
 #include <QStringList>
 
-#include <iostream>
 #include <functional>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,13 +70,11 @@ int Manager::run()
                 {
                     emit error(e.what());
                     logger << e.what() << std::endl;
-                    std::cerr << e.what() << std::endl;
                 }
                 catch(execute_error& e)
                 {
                     emit error(e.what());
                     logger << e.what() << std::endl;
-                    std::cerr << e.what() << std::endl;
                 }
             }
         }
@@ -93,7 +90,6 @@ int Manager::run()
     catch(std::exception& e)
     {
         logger << log::error << e.what() << std::endl;
-        std::cerr << e.what() << std::endl;
         return 1;
     }
 }

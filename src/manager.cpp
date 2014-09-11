@@ -113,6 +113,9 @@ void Manager::render(QApplication& application)
         view->show();
 
         QGraphicsObject* root= view->rootObject();
+        root->setProperty("width", view->width());
+        root->setProperty("height", view->height());
+
         connect(this, SIGNAL(reset()), root, SIGNAL(reset()));
         connect(this, SIGNAL(error(QString)), root, SIGNAL(error(QString)));
         connect(root, SIGNAL(quit()), &application, SLOT(quit()));

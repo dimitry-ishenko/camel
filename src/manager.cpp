@@ -22,10 +22,9 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
     QObject(parent)
 {
     if(name.size()) config.xorg_name= name.toStdString();
-    if(path.size()) config.path= path;
-    config.parse();
-
     if(config.xorg_name.empty()) config.xorg_name= x11::server::default_name;
+
+    if(path.size()) config.path= path;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,6 +32,8 @@ int Manager::run()
 {
     try
     {
+        config.parse();
+
         x11::server server(config.xorg_name, config.xorg_auth, config.xorg_args);
 
         pam::context context(config.pam_service);

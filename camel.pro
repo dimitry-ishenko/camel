@@ -43,4 +43,6 @@ HEADERS += \
     src/manager.h           \
 
 OTHER_FILES += \
-    theme/default/theme.qml \
+    pam/camel               \
+    camel.conf              \
+    camel.service           \

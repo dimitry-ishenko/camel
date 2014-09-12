@@ -1,0 +1,36 @@
+Camel is a QML based login manager.
+
+It has a few dependencies and is desktop environment agnostic.
+
+Camel is written in c++ and uses some c++11 features.
+
+To compile it you will need the Clang compiler and the libc++ library, which
+are both part of the LLVM project (http://llvm.org).
+
+You may also be able to compile it using later versions of the GNU gcc compiler
+and the libstdc++ library. (I had trouble with gcc 4.7.3, as it does not fully
+support c++11.)
+
+Camel additionally requires the following packages:
+    X.Org X server
+    Qt (including QtDeclarative)
+    PAM
+
+For installation instructions, please refer to the INSTALL file.
+
+Camel always runs in foreground and exits after successful login/logout cycle.
+It is meant to be used in conjunction with a service manager (eg, OpenRC,
+systemd, upstart, etc.) and comes with .service file for systemd.
+
+Camel supports the following options:
+    camel [-h|--help]
+    camel [:n] [<config-file>]
+
+Where:
+    -h | --help     shows available options
+    :n              overrides X server display name (default: :0)
+    <config-file>   specifies config file to use (default: /etc/camel.conf)
+
+Camel comes with a few basic themes. You can use any of them (or the minimal
+theme) as a starting point to create your own. You are only limited by what QML
+can do.

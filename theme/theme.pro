@@ -38,3 +38,21 @@ OTHER_FILES += \
     ariya/COPYRIGHT                 \
     ariya/background.png            \
     ariya/theme.qml                 \
+
+########################################
+OTHER_FILES += \
+    redmond/username_active.png     \
+    redmond/username.png            \
+    redmond/tile.png                \
+    redmond/system_menu.png         \
+    redmond/session_active.png      \
+    redmond/session.png             \
+    redmond/power_active.png        \
+    redmond/power.png               \
+    redmond/password_active.png     \
+    redmond/password.png            \
+    redmond/menu_item_active.png    \
+    redmond/login_active.png        \
+    redmond/login.png               \
+    redmond/background.png          \
+    redmond/theme.qml               \

@@ -48,6 +48,7 @@ OTHER_FILES += \
     camel.conf                      \
     camel.service                   \
     COPYING                         \
+    AUTHORS                         \
 
 ########################################
 # themes

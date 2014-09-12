@@ -47,6 +47,7 @@ OTHER_FILES += \
     pam/camel                       \
     camel.conf                      \
     camel.service                   \
+    COPYING                         \
 
 ########################################
 # themes

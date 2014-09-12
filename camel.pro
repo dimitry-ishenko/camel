@@ -54,6 +54,10 @@ OTHER_FILES += \
 # themes
 ########################################
 OTHER_FILES += \
+    theme/minimal/theme.qml         \
+
+########################################
+OTHER_FILES += \
     theme/simple/background.jpg     \
     theme/simple/theme.qml          \
 

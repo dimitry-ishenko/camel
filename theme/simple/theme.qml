@@ -1,12 +1,6 @@
 import QtQuick 1.1
 
-Image {
-    ////////////////////////////////////////
-    id: background
-    source: "background.jpg"
-    fillMode: Image.PreserveAspectCrop
-    clip: true
-
+Rectangle {
     ////////////////////////////////////////
     signal reset()
     signal info(string text)
@@ -101,161 +95,171 @@ Image {
     }
 
     ////////////////////////////////////////
-    Rectangle {
-        id: panel
-        width: 380
-        height: 180
-        radius: 5
-        color: "#30ffffff"
-        border.color: "#a0e0e0e0"
-        anchors.verticalCenterOffset: 80
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.horizontalCenter: parent.horizontalCenter
+    Image {
+        id: background
+        source: "background.jpg"
+        anchors.fill: parent
+        fillMode: Image.PreserveAspectCrop
+        smooth: true
+        clip: true
 
         ////////////////////////////////////////
-        Text {
-            id: hostname
-            objectName: "hostname"
-            width: 260
-            height: 40
-            anchors.top: parent.top
-            anchors.topMargin: 16
+        Rectangle {
+            id: panel
+            width: 380
+            height: 180
+            radius: 5
+            color: "#30ffffff"
+            border.color: "#a0e0e0e0"
+            anchors.verticalCenterOffset: 80
+            anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
 
-            font.family: "Linux Biolinum"
-            font.pointSize: 28
-            font.bold: true
-            color: "#ffffff"
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-            clip: true
-        }
-
-        ////////////////////////////////////////
-        Text {
-            id: message_label
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 10
-            height: 20
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.right: parent.right
-            anchors.rightMargin: 10
-
-            font.family: "Terminus"
-            font.pointSize: 14
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-            clip: true
-        }
-
-        ////////////////////////////////////////
-        Item {
-            id: username_area
-            height: 26
-            anchors.verticalCenter: parent.verticalCenter;
-            anchors.left: parent.left
-            anchors.leftMargin: 40
-            anchors.right: parent.right
-            anchors.rightMargin: 40
-
+            ////////////////////////////////////////
             Text {
-                id: username_label
+                id: hostname
+                objectName: "hostname"
+                width: 260
+                height: 40
                 anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                anchors.right: username_panel.left
-                anchors.topMargin: username.anchors.topMargin
-                anchors.bottomMargin: username.anchors.bottomMargin
-                anchors.leftMargin: username.anchors.leftMargin
-                anchors.rightMargin: 10
+                anchors.topMargin: 16
+                anchors.horizontalCenter: parent.horizontalCenter
 
-                text: "username"
-                font: username.font
+                font.family: "Linux Biolinum"
+                font.pointSize: 28
+                font.bold: true
                 color: "#ffffff"
-                verticalAlignment: Text.AlignTop
-                horizontalAlignment: Text.AlignRight
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
                 clip: true
             }
 
-            Rectangle {
-                id: username_panel
-                width: 190
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.right: parent.right
-                color: "#30ffffff"
-                border.color: "#a0e0e0e0"
-
-                TextInput {
-                    id: username
-                    objectName: "username"
-                    anchors.fill: parent
-                    anchors.topMargin: 2
-                    anchors.bottomMargin: 2
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
-                    font.family: "Terminus"
-                    font.pointSize: 16
-
-                    Keys.onTabPressed: password.focus = true
-                    Keys.onReturnPressed: password.focus = true
-                }
-            }
-        }
-
-        ////////////////////////////////////////
-        Item {
-            id: password_area
-            height: username_area.height
-            anchors.top: username_area.bottom
-            anchors.topMargin: 16
-            anchors.left: username_area.left
-            anchors.right: username_area.right
-
+            ////////////////////////////////////////
             Text {
-                id: password_label
-                anchors.top: parent.top
+                id: message_label
                 anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
+                height: 20
                 anchors.left: parent.left
-                anchors.right: password_panel.left
-                anchors.topMargin: password.anchors.topMargin
-                anchors.bottomMargin: password.anchors.bottomMargin
-                anchors.leftMargin: password.anchors.leftMargin
+                anchors.leftMargin: 10
+                anchors.right: parent.right
                 anchors.rightMargin: 10
 
-                text: "password"
-                font: username_label.font
-                color: username_label.color
-                verticalAlignment: username_label.verticalAlignment
-                horizontalAlignment: username_label.horizontalAlignment
+                font.family: "Terminus"
+                font.pointSize: 14
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
                 clip: true
             }
 
-            Rectangle {
-                id: password_panel
-                width: username_panel.width
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
+            ////////////////////////////////////////
+            Item {
+                id: username_area
+                height: 26
+                anchors.verticalCenter: parent.verticalCenter;
+                anchors.left: parent.left
+                anchors.leftMargin: 40
                 anchors.right: parent.right
-                color: username_panel.color
-                border.color: username_panel.border.color
+                anchors.rightMargin: 40
 
-                TextInput {
-                    id: password
-                    objectName: "password"
-                    anchors.fill: parent
+                Text {
+                    id: username_label
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: username_panel.left
                     anchors.topMargin: username.anchors.topMargin
                     anchors.bottomMargin: username.anchors.bottomMargin
                     anchors.leftMargin: username.anchors.leftMargin
-                    anchors.rightMargin: username.anchors.rightMargin
+                    anchors.rightMargin: 10
+
+                    text: "username"
                     font: username.font
+                    color: "#ffffff"
+                    verticalAlignment: Text.AlignTop
+                    horizontalAlignment: Text.AlignRight
+                    clip: true
+                }
 
-                    echoMode: TextInput.Password
-                    passwordCharacter: "*"
+                Rectangle {
+                    id: username_panel
+                    width: 190
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    color: "#30ffffff"
+                    border.color: "#a0e0e0e0"
 
-                    Keys.onTabPressed: username.focus = true
-                    Keys.onReturnPressed: quit()
+                    TextInput {
+                        id: username
+                        objectName: "username"
+                        anchors.fill: parent
+                        anchors.topMargin: 2
+                        anchors.bottomMargin: 2
+                        anchors.leftMargin: 8
+                        anchors.rightMargin: 8
+                        font.family: "Terminus"
+                        font.pointSize: 16
+
+                        Keys.onTabPressed: password.focus = true
+                        Keys.onReturnPressed: password.focus = true
+                    }
+                }
+            }
+
+            ////////////////////////////////////////
+            Item {
+                id: password_area
+                height: username_area.height
+                anchors.top: username_area.bottom
+                anchors.topMargin: 16
+                anchors.left: username_area.left
+                anchors.right: username_area.right
+
+                Text {
+                    id: password_label
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: password_panel.left
+                    anchors.topMargin: password.anchors.topMargin
+                    anchors.bottomMargin: password.anchors.bottomMargin
+                    anchors.leftMargin: password.anchors.leftMargin
+                    anchors.rightMargin: 10
+
+                    text: "password"
+                    font: username_label.font
+                    color: username_label.color
+                    verticalAlignment: username_label.verticalAlignment
+                    horizontalAlignment: username_label.horizontalAlignment
+                    clip: true
+                }
+
+                Rectangle {
+                    id: password_panel
+                    width: username_panel.width
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    color: username_panel.color
+                    border.color: username_panel.border.color
+
+                    TextInput {
+                        id: password
+                        objectName: "password"
+                        anchors.fill: parent
+                        anchors.topMargin: username.anchors.topMargin
+                        anchors.bottomMargin: username.anchors.bottomMargin
+                        anchors.leftMargin: username.anchors.leftMargin
+                        anchors.rightMargin: username.anchors.rightMargin
+                        font: username.font
+
+                        echoMode: TextInput.Password
+                        passwordCharacter: "*"
+
+                        Keys.onTabPressed: username.focus = true
+                        Keys.onReturnPressed: quit()
+                    }
                 }
             }
         }

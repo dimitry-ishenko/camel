@@ -12,6 +12,46 @@ QMAKE_CXX    = clang++
 QMAKE_CXXFLAGS = -std=c++11 -stdlib=libc++
 
 ########################################
+!isEmpty(DESTDIR) {
+    ROOTDIR = $$DESTDIR
+    DESTDIR =
+}
+isEmpty(PREFIX) {
+    PREFIX = /usr/local
+}
+isEmpty(BINDIR) {
+    BINDIR = $$PREFIX/bin
+}
+isEmpty(SYSCONFIGDIR) {
+    SYSCONFIGDIR = $$PREFIX/etc
+}
+isEmpty(LIBDIR) {
+    LIBDIR = $$PREFIX/lib
+}
+isEmpty(DATADIR) {
+    DATADIR = $$PREFIX/share
+}
+
+target.path = $$ROOTDIR/$$BINDIR
+INSTALLS += target
+
+pam.files = pam/camel
+pam.path = $$ROOTDIR/$$SYSCONFDIR/pam.d
+INSTALLS += pam
+
+conf.files = camel.conf
+conf.path = $$ROOTDIR/$$SYSCONFDIR
+INSTALLS += conf
+
+service.files = camel.service
+service.path = $$ROOTDIR/$$LIBDIR/systemd/system
+INSTALLS += service
+
+theme.files = theme/*
+theme.path = $$ROOTDIR/$$DATADIR/$$TARGET/theme
+INSTALLS += theme
+
+########################################
 SOURCES += \
     lib/log.cpp                     \
     lib/utility.cpp                 \

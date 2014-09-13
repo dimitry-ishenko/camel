@@ -137,9 +137,8 @@ Rectangle {
             ////////////////////////////////////////
             Text {
                 id: message_label
+                height: 40
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: 10
-                height: 20
                 anchors.left: parent.left
                 anchors.leftMargin: 10
                 anchors.right: parent.right
@@ -149,6 +148,7 @@ Rectangle {
                 font.pointSize: 14
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
                 clip: true
             }
 
@@ -157,6 +157,7 @@ Rectangle {
                 id: username_area
                 height: 26
                 anchors.verticalCenter: parent.verticalCenter;
+                anchors.verticalCenterOffset: -5
                 anchors.left: parent.left
                 anchors.leftMargin: 40
                 anchors.right: parent.right

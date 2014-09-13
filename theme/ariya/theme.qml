@@ -124,9 +124,8 @@ Rectangle {
             ////////////////////////////////////////
             Text {
                 id: message_label
-                height: 20
+                height: 40
                 anchors.top: password_area.bottom
-                anchors.topMargin: 10
                 anchors.left: parent.left
                 anchors.leftMargin: 20
                 anchors.right: parent.right
@@ -137,6 +136,7 @@ Rectangle {
                 font.bold: true
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
                 clip: true
             }
 

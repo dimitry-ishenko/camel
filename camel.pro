@@ -87,9 +87,11 @@ OTHER_FILES += \
     pam/camel                       \
     camel.conf                      \
     camel.service                   \
-    COPYING                         \
-    README                          \
     AUTHORS                         \
+    COPYING                         \
+    INSTALL                         \
+    NEWS                            \
+    README                          \
 
 ########################################
 # themes

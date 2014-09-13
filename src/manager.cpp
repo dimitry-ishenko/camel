@@ -36,8 +36,9 @@ int Manager::run()
         x11::server server(config.xorg_name, config.xorg_auth, config.xorg_args);
 
         pam::context context(config.pam_service);
-        context.set_user_func(std::bind(&Manager::get_user, this, std::placeholders::_1));
-        context.set_pass_func(std::bind(&Manager::get_pass, this, std::placeholders::_1));
+        context.set_user_func (std::bind(&Manager::get_user,  this, std::placeholders::_1));
+        context.set_pass_func (std::bind(&Manager::get_pass,  this, std::placeholders::_1));
+        context.set_error_func(std::bind(&Manager::set_error, this, std::placeholders::_1));
 
         context.set(pam::item::ruser, "root");
         context.set(pam::item::tty, server.name());
@@ -61,6 +62,7 @@ int Manager::run()
                     else
                     {
                         context.reset(pam::item::user);
+                        reset_error();
                         context.authenticate();
 
                         break;
@@ -68,8 +70,11 @@ int Manager::run()
                 }
                 catch(pam::pamh_error& e)
                 {
-                    emit error(e.what());
-                    logger << e.what() << std::endl;
+                    std::string x= get_error();
+                    if(x.empty()) x= e.what();
+
+                    emit error(x.data());
+                    logger << x << std::endl;
                 }
                 catch(execute_error& e)
                 {

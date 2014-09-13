@@ -151,7 +151,7 @@ Rectangle {
     Text {
         id: label
         width: 400
-        height: 30
+        height: 60
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: 150
         anchors.horizontalCenter: parent.horizontalCenter
@@ -159,6 +159,7 @@ Rectangle {
 
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
         clip: true
     }
 }

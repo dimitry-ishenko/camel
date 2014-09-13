@@ -16,39 +16,39 @@ QMAKE_CXXFLAGS = -std=c++11 -stdlib=libc++
     ROOTDIR = $$DESTDIR
     DESTDIR =
 }
-isEmpty(PREFIX) {
-    PREFIX = /usr/local
+isEmpty(prefix) {
+    prefix = /usr/local
 }
-isEmpty(BINDIR) {
-    BINDIR = $$PREFIX/bin
+isEmpty(bindir) {
+    bindir = $$prefix/bin
 }
-isEmpty(SYSCONFDIR) {
-    SYSCONFDIR = $$PREFIX/etc
+isEmpty(sysconfdir) {
+    sysconfdir = $$prefix/etc
 }
-isEmpty(LIBDIR) {
-    LIBDIR = $$PREFIX/lib
+isEmpty(libdir) {
+    libdir = $$prefix/lib
 }
-isEmpty(DATADIR) {
-    DATADIR = $$PREFIX/share
+isEmpty(datadir) {
+    datadir = $$prefix/share
 }
 
-target.path = $$ROOTDIR/$$BINDIR
+target.path = $$ROOTDIR/$$bindir
 INSTALLS += target
 
 pam.files = pam/camel
-pam.path = $$ROOTDIR/$$SYSCONFDIR/pam.d
+pam.path = $$ROOTDIR/$$sysconfdir/pam.d
 INSTALLS += pam
 
 conf.files = camel.conf
-conf.path = $$ROOTDIR/$$SYSCONFDIR
+conf.path = $$ROOTDIR/$$sysconfdir
 INSTALLS += conf
 
 service.files = camel.service
-service.path = $$ROOTDIR/$$LIBDIR/systemd/system
+service.path = $$ROOTDIR/$$libdir/systemd/system
 INSTALLS += service
 
 theme.files = theme/*
-theme.path = $$ROOTDIR/$$DATADIR/$$TARGET/theme
+theme.path = $$ROOTDIR/$$datadir/$$TARGET/theme
 INSTALLS += theme
 
 ########################################

@@ -55,6 +55,8 @@ private:
     void set_sess();
     QString get_sess();
 
+    bool try_auth(pam::context& context);
+
     int startup(pam::context& context, x11::server& server, const QString& sess);
 };
 

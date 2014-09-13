@@ -57,24 +57,12 @@ int Manager::run()
                     QString sess= get_sess();
                     if(sess == "reboot")
                         this_process::execute(config.reboot);
+
                     else if(sess == "poweroff")
                         this_process::execute(config.poweroff);
-                    else
-                    {
-                        context.reset(pam::item::user);
-                        reset_error();
-                        context.authenticate();
 
+                    else if(try_auth(context))
                         break;
-                    }
-                }
-                catch(pam::pamh_error& e)
-                {
-                    std::string x= get_error();
-                    if(x.empty()) x= e.what();
-
-                    emit error(x.data());
-                    logger << x << std::endl;
                 }
                 catch(execute_error& e)
                 {
@@ -191,6 +179,35 @@ QString Manager::get_sess()
     if(session) value= session->property("text").toString();
 
     return value.size()? value: "Xsession";
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+bool Manager::try_auth(pam::context& context)
+{
+    try
+    {
+        try
+        {
+            context.reset(pam::item::user);
+            reset_error();
+            context.authenticate();
+
+            return true;
+        }
+        catch(pam::account_error& e)
+        {
+            throw;
+        }
+    }
+    catch(pam::pamh_error& e)
+    {
+        std::string x= get_error();
+        if(x.empty()) x= e.what();
+
+        emit error(x.data());
+        logger << x << std::endl;
+    }
+    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

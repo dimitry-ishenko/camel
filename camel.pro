@@ -22,8 +22,8 @@ isEmpty(PREFIX) {
 isEmpty(BINDIR) {
     BINDIR = $$PREFIX/bin
 }
-isEmpty(SYSCONFIGDIR) {
-    SYSCONFIGDIR = $$PREFIX/etc
+isEmpty(SYSCONFDIR) {
+    SYSCONFDIR = $$PREFIX/etc
 }
 isEmpty(LIBDIR) {
     LIBDIR = $$PREFIX/lib

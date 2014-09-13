@@ -1,0 +1,27 @@
+Installation instructions
+
+1. Make sure the following packages are installed:
+    Clang (part of LLVM)
+    libc++ (part of LLVM)
+    X.Org X server
+    Qt (including QtDeclarative)
+    PAM
+
+2. Run qmake. You can pass one or more (or none...) of the following variables
+to determine, where the things get installed:
+
+<name>      <default value>
+DESTDIR     /
+prefix      /usr/local
+bindir      $(prefix)/bin
+sysconfdir  $(prefix)/etc
+libdir      $(prefix)/lib
+datadir     $(prefix)/share
+
+Example: qmake prefix=/usr sysconfdir=/etc
+
+3. Run make
+
+4. Run make install as root (or sudo make install as normal user).
+
+5. Share and enjoy.

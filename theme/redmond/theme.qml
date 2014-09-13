@@ -160,16 +160,17 @@ Rectangle {
         ////////////////////////////////////////
         Text {
             id: message_label
-            height: 20
+            width: 300
+            height: 40
             anchors.top: password_panel.bottom
-            anchors.topMargin: 20
-            anchors.left: password_panel.left
-            anchors.right: password_panel.right
+            anchors.topMargin: 10
+            anchors.horizontalCenter: password_panel.horizontalCenter
             font.family: "Sans"
             font.pixelSize: 12
 
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
             clip: true
         }
 

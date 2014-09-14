@@ -3,9 +3,13 @@ import QtQuick 1.1
 Rectangle {
     ////////////////////////////////////////
     signal reset()
+
     signal info(string text)
     signal error(string text)
-    signal quit()
+
+    signal login()
+    signal reboot()
+    signal poweroff()
 
     ////////////////////////////////////////
     onReset: {
@@ -17,6 +21,11 @@ Rectangle {
     ////////////////////////////////////////
     onInfo: message(text, "#555555")
     onError: message(text, "#ff0000")
+
+    Connections {
+        target: settings
+        onSessionChanged: info(settings.session)
+    }
 
     ////////////////////////////////////////
     function message(text, color) {
@@ -55,42 +64,18 @@ Rectangle {
 
     ////////////////////////////////////////
     Keys.onPressed: {
-        if(event.key === Qt.Key_Escape)
-            reset()
-        if(event.key === Qt.Key_F1)
-            info("F8 session F10 reboot F11 poweroff")
-        else if(event.key === Qt.Key_F8) {
-            ++sessions.index
-            if(sessions.index >= sessions.text.length)
-                sessions.index = 0
-            session.text = sessions.text[sessions.index]
+        switch(event.key) {
+            case Qt.Key_Escape: reset()
+                break
+            case Qt.Key_F1: info("F8 session F10 reboot F11 poweroff")
+                break
+            case Qt.Key_F8: settings.nextSession()
+                break
+            case Qt.Key_F10: reboot()
+                break
+            case Qt.Key_F11: poweroff()
+                break
         }
-        else if(event.key === Qt.Key_F10) {
-            session.text = "reboot"
-            info("Rebooting")
-            quit()
-        }
-        else if(event.key === Qt.Key_F11) {
-            session.text = "poweroff"
-            info("Powering off")
-            quit()
-        }
-    }
-
-    ////////////////////////////////////////
-    Item {
-        id: sessions
-        objectName: "sessions"
-        property variant text: [ ]
-        property int index: 0
-    }
-
-    ////////////////////////////////////////
-    Item {
-        id: session
-        objectName: "session"
-        property string text: ""
-        onTextChanged: info(text)
     }
 
     ////////////////////////////////////////
@@ -121,6 +106,7 @@ Rectangle {
                 height: 40
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors { top: parent.top; topMargin: 16 }
+                text: settings.hostname
                 font { family: "Linux Biolinum"; pointSize: 28; bold: true }
                 color: "#ffffff"
                 horizontalAlignment: Text.AlignHCenter
@@ -233,7 +219,11 @@ Rectangle {
                         passwordCharacter: "*"
 
                         Keys.onTabPressed: username.focus = true
-                        Keys.onReturnPressed: quit()
+                        Keys.onReturnPressed: {
+                            settings.username = username.text
+                            settings.password = password.text
+                            login()
+                        }
                     }
                 }
             }

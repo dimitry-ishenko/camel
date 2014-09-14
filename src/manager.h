@@ -43,15 +43,8 @@ private:
     void render();
 
     std::string _M_error;
-    const std::string& get_error() const { return _M_error; }
-    bool set_error(const std::string& x)
-    {
-        _M_error= x;
-        return true;
-    }
-    void reset_error() { _M_error.clear(); }
-
     bool _M_login;
+
     int startup(const QString& sess);
 };
 

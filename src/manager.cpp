@@ -55,7 +55,7 @@ int Manager::run()
         context->set_user_func ([this](std::string& x) { x= settings.username().toStdString(); return true; });
         context->set_pass_func ([this](std::string& x) { x= settings.password().toStdString(); return true; });
 
-        context->set_error_func(std::bind(&Manager::set_error, this, std::placeholders::_1));
+        context->set_error_func([this](const std::string& x) { _M_error=x; return true; });
 
         context->set(pam::item::ruser, "root");
         context->set(pam::item::tty, server->name());
@@ -142,7 +142,7 @@ void Manager::login()
         try
         {
             context->reset(pam::item::user);
-            reset_error();
+            _M_error.clear();
             context->authenticate();
 
             _M_login= true;
@@ -155,8 +155,7 @@ void Manager::login()
     }
     catch(pam::pamh_error& e)
     {
-        std::string x= get_error();
-        if(x.empty()) x= e.what();
+        std::string x= _M_error.empty()? e.what(): _M_error;
 
         emit error(x.data());
         logger << x << std::endl;

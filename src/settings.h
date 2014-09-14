@@ -34,21 +34,23 @@ public:
     const QString& session() const;
 
     ////////////////////
-    Q_PROPERTY(QString username READ username WRITE setUsername NOTIFY usernameChanged)
+    Q_PROPERTY(QString username READ username WRITE setUsername RESET resetUsername NOTIFY usernameChanged)
     const QString& username() const { return _M_username; }
     void setUsername(const QString& x)
     {
         _M_username= x;
         emit usernameChanged(x);
     }
+    void resetUsername() { setUsername(QString()); }
 
-    Q_PROPERTY(QString password READ password WRITE setPassword NOTIFY passwordChanged)
+    Q_PROPERTY(QString password READ password WRITE setPassword RESET resetPassword NOTIFY passwordChanged)
     const QString& password() const { return _M_password; }
     void setPassword(const QString& x)
     {
         _M_password= x;
         emit passwordChanged(x);
     }
+    void resetPassword() { setPassword(QString()); }
 
     ////////////////////
     Q_PROPERTY(QString hostname READ hostname NOTIFY hostnameChanged)
@@ -82,6 +84,12 @@ public slots:
 
     void nextSession();
     void prevSession();
+
+    void reset()
+    {
+        resetUsername();
+        resetPassword();
+    }
 
 private:
     QStringList _M_sessions;

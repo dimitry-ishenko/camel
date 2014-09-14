@@ -7,13 +7,13 @@
 #include "x11/server.h"
 #include "pam/pam.h"
 
+#include <QApplication>
 #include <QObject>
 #include <QString>
 
-using namespace app;
+#include <memory>
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class QApplication;
+using namespace app;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class Manager: public QObject
@@ -30,6 +30,10 @@ signals:
 private:
     Config config;
 
+    std::unique_ptr<x11::server> server;
+    std::unique_ptr<pam::context> context;
+    std::unique_ptr<QApplication> application;
+
     QObject* username;
     QObject* password;
 
@@ -38,7 +42,7 @@ private:
 
     QObject* hostname;
 
-    void render(QApplication&);
+    void render();
 
     bool get_user(std::string&);
     bool get_pass(std::string&);
@@ -55,9 +59,9 @@ private:
     void set_sess();
     QString get_sess();
 
-    bool try_auth(pam::context& context);
+    bool try_auth();
 
-    int startup(pam::context& context, x11::server& server, const QString& sess);
+    int startup(const QString& sess);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

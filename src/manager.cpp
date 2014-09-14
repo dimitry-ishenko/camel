@@ -5,7 +5,6 @@
 #include "environ.h"
 #include "log.h"
 
-#include <QApplication>
 #include <QtDeclarative/QDeclarativeView>
 #include <QDesktopWidget>
 #include <QGraphicsObject>
@@ -29,66 +28,73 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int Manager::run()
 {
+    int code=0;
     try
     {
         config.parse();
 
-        x11::server server(config.xorg_name, config.xorg_auth, config.xorg_args);
+        server.reset(new x11::server(config.xorg_name, config.xorg_auth, config.xorg_args));
 
-        pam::context context(config.pam_service);
-        context.set_user_func (std::bind(&Manager::get_user,  this, std::placeholders::_1));
-        context.set_pass_func (std::bind(&Manager::get_pass,  this, std::placeholders::_1));
-        context.set_error_func(std::bind(&Manager::set_error, this, std::placeholders::_1));
+        context.reset(new pam::context(config.pam_service));
+        context->set_user_func (std::bind(&Manager::get_user,  this, std::placeholders::_1));
+        context->set_pass_func (std::bind(&Manager::get_pass,  this, std::placeholders::_1));
+        context->set_error_func(std::bind(&Manager::set_error, this, std::placeholders::_1));
 
-        context.set(pam::item::ruser, "root");
-        context.set(pam::item::tty, server.name());
+        context->set(pam::item::ruser, "root");
+        context->set(pam::item::tty, server->name());
 
+        application.reset(new QApplication(server->display()));
+        render();
+
+        QString sess;
+        while(true)
         {
-            QApplication application(server.display());
-            render(application);
+            emit reset();
+            application->exec();
 
-            while(true)
+            sess= get_sess();
+            try
             {
-                emit reset();
-                application.exec();
+                if(sess == "reboot")
+                    this_process::execute(config.reboot);
 
-                try
-                {
-                    QString sess= get_sess();
-                    if(sess == "reboot")
-                        this_process::execute(config.reboot);
+                else if(sess == "poweroff")
+                    this_process::execute(config.poweroff);
 
-                    else if(sess == "poweroff")
-                        this_process::execute(config.poweroff);
-
-                    else if(try_auth(context))
-                        break;
-                }
-                catch(execute_error& e)
-                {
-                    emit error(e.what());
-                    logger << e.what() << std::endl;
-                }
+                else if(try_auth())
+                    break;
+            }
+            catch(execute_error& e)
+            {
+                emit error(e.what());
+                logger << e.what() << std::endl;
             }
         }
 
-        context.open_session();
+        application.reset();
 
-        app::process process(process::group, &Manager::startup, this, std::ref(context), std::ref(server), get_sess());
+        context->open_session();
+
+        app::process process(process::group, &Manager::startup, this, sess);
         process.join();
 
-        context.close_session();
-        return 0;
+        context->close_session();
     }
     catch(std::exception& e)
     {
         logger << log::error << e.what() << std::endl;
-        return 1;
+        code=1;
     }
+
+    application.reset();
+    context.reset();
+    server.reset();
+
+    return code;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::render(QApplication& application)
+void Manager::render()
 {
     QString current= QDir::currentPath();
     try
@@ -101,8 +107,8 @@ void Manager::render(QApplication& application)
         if(!QFile::exists(config.theme_file))
             throw std::runtime_error("Theme file "+ config.theme_file.toStdString()+ " not found");
 
-        QDeclarativeView* view= new QDeclarativeView(QUrl::fromLocalFile(config.theme_file), application.desktop());
-        view->setGeometry(application.desktop()->screenGeometry());
+        QDeclarativeView* view= new QDeclarativeView(QUrl::fromLocalFile(config.theme_file), application->desktop());
+        view->setGeometry(application->desktop()->screenGeometry());
         view->show();
 
         QGraphicsObject* root= view->rootObject();
@@ -111,7 +117,7 @@ void Manager::render(QApplication& application)
 
         connect(this, SIGNAL(reset()), root, SIGNAL(reset()));
         connect(this, SIGNAL(error(QString)), root, SIGNAL(error(QString)));
-        connect(root, SIGNAL(quit()), &application, SLOT(quit()));
+        connect(root, SIGNAL(quit()), application.get(), SLOT(quit()));
 
         username= root->findChild<QObject*>("username");
         if(!username) throw std::runtime_error("Missing username element");
@@ -182,15 +188,15 @@ QString Manager::get_sess()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-bool Manager::try_auth(pam::context& context)
+bool Manager::try_auth()
 {
     try
     {
         try
         {
-            context.reset(pam::item::user);
+            context->reset(pam::item::user);
             reset_error();
-            context.authenticate();
+            context->authenticate();
 
             return true;
         }
@@ -211,9 +217,9 @@ bool Manager::try_auth(pam::context& context)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int Manager::startup(pam::context& context, x11::server& server, const QString& sess)
+int Manager::startup(const QString& sess)
 {
-    credentials c(context.get(pam::item::user));
+    credentials c(context->get(pam::item::user));
     app::environ e;
 
     std::string auth= c.home+ "/.Xauthority";
@@ -234,11 +240,11 @@ int Manager::startup(pam::context& context, x11::server& server, const QString& 
     value= this_environ::get("TERM", &found);
     if(found) e.set("TERM", value);
 
-    e.set("DISPLAY", context.get(pam::item::tty));
+    e.set("DISPLAY", context->get(pam::item::tty));
     e.set("XAUTHORITY", auth);
 
     c.morph_into();
-    server.set_cookie(auth);
+    server->set_cookie(auth);
 
     this_process::replace_e(e, (config.sessions_path+ "/"+ sess).toStdString());
     return 0;

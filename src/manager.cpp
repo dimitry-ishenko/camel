@@ -6,6 +6,7 @@
 #include "log.h"
 
 #include <QtDeclarative/QDeclarativeView>
+#include <QtDeclarative/QDeclarativeContext>
 #include <QDesktopWidget>
 #include <QGraphicsObject>
 #include <QtNetwork/QHostInfo>
@@ -19,10 +20,26 @@
 Manager::Manager(const QString& name, const QString& path, QObject* parent):
     QObject(parent)
 {
+    ////////////////////
     if(name.size()) config.xorg_name= name.toStdString();
     if(config.xorg_name.empty()) config.xorg_name= x11::server::default_name;
 
     if(path.size()) config.path= path;
+
+    config.parse();
+
+    ////////////////////
+    settings.setHostname(QHostInfo::localHostName());
+
+    QDir dir(config.sessions_path);
+    if(dir.isReadable())
+    {
+        QStringList sessions= dir.entryList(QDir::Files);
+        if(config.sessions.size())
+            sessions= sessions.toSet().intersect(config.sessions.toSet()).toList();
+
+        settings.setSessions(sessions);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,8 +48,6 @@ int Manager::run()
     int code=0;
     try
     {
-        config.parse();
-
         server.reset(new x11::server(config.xorg_name, config.xorg_auth, config.xorg_args));
 
         context.reset(new pam::context(config.pam_service));
@@ -52,7 +67,9 @@ int Manager::run()
             emit reset();
             application->exec();
 
-            sess= get_sess();
+            sess= settings.session();
+            if(!sess.size()) sess= "Xsession";
+
             try
             {
                 if(sess == "reboot")
@@ -99,17 +116,16 @@ void Manager::render()
     QString current= QDir::currentPath();
     try
     {
-        username= password= sessions= session= hostname= nullptr;
-
         if(!QDir::setCurrent(config.theme_path+ "/"+ config.theme_name))
             throw std::runtime_error("Theme dir "+ config.theme_name.toStdString()+ " not found");
 
         if(!QFile::exists(config.theme_file))
             throw std::runtime_error("Theme file "+ config.theme_file.toStdString()+ " not found");
 
-        QDeclarativeView* view= new QDeclarativeView(QUrl::fromLocalFile(config.theme_file), application->desktop());
-        view->setGeometry(application->desktop()->screenGeometry());
-        view->show();
+        QDeclarativeView* view= new QDeclarativeView(application->desktop());
+        view->rootContext()->setContextProperty("settings", &settings);
+        view->setSource(QUrl::fromLocalFile(config.theme_file));
+        view->setGeometry(QApplication::desktop()->screenGeometry());
 
         QGraphicsObject* root= view->rootObject();
         root->setProperty("width", view->width());
@@ -119,18 +135,7 @@ void Manager::render()
         connect(this, SIGNAL(error(QString)), root, SIGNAL(error(QString)));
         connect(root, SIGNAL(quit()), application.get(), SLOT(quit()));
 
-        username= root->findChild<QObject*>("username");
-        if(!username) throw std::runtime_error("Missing username element");
-
-        password= root->findChild<QObject*>("password");
-        if(!password) throw std::runtime_error("Missing password element");
-
-        session= root->findChild<QObject*>("session");
-        sessions= root->findChild<QObject*>("sessions");
-        set_sess();
-
-        hostname= root->findChild<QObject*>("hostname");
-        if(hostname) hostname->setProperty("text", QHostInfo::localHostName());
+        view->show();
 
         QDir::setCurrent(current);
     }
@@ -144,47 +149,15 @@ void Manager::render()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Manager::get_user(std::string& value)
 {
-    if(username)
-    {
-        value= username->property("text").toString().toStdString();
-        return true;
-    }
-    else return false;
+    value= settings.username().toStdString();
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Manager::get_pass(std::string& value)
 {
-    if(password)
-    {
-        value= password->property("text").toString().toStdString();
-        return true;
-    }
-    else return false;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::set_sess()
-{
-    QDir dir(config.sessions_path);
-    if(dir.isReadable())
-    {
-        QStringList files= dir.entryList(QDir::Files);
-        if(config.sessions.size()) files= files.toSet().intersect(config.sessions.toSet()).toList();
-
-        if(sessions) sessions->setProperty("text", files);
-
-        if(session && files.size()) session->setProperty("text", files[0]);
-    }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-QString Manager::get_sess()
-{
-    QString value;
-    if(session) value= session->property("text").toString();
-
-    return value.size()? value: "Xsession";
+    value= settings.password().toStdString();
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

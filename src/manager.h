@@ -4,6 +4,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "config.h"
+#include "settings.h"
 #include "x11/server.h"
 #include "pam/pam.h"
 
@@ -29,18 +30,11 @@ signals:
 
 private:
     Config config;
+    Settings settings;
 
     std::unique_ptr<x11::server> server;
     std::unique_ptr<pam::context> context;
     std::unique_ptr<QApplication> application;
-
-    QObject* username;
-    QObject* password;
-
-    QObject* sessions;
-    QObject* session;
-
-    QObject* hostname;
 
     void render();
 
@@ -55,9 +49,6 @@ private:
         return true;
     }
     void reset_error() { _M_error.clear(); }
-
-    void set_sess();
-    QString get_sess();
 
     bool try_auth();
 

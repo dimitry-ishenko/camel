@@ -23,8 +23,8 @@ public:
 
 signals:
     void reset();
-    void info(const QString& text);
-    void error(const QString& text);
+    void info(const QVariant& text);
+    void error(const QVariant& text);
 
 private slots:
     void login();

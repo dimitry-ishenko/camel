@@ -110,10 +110,10 @@ void Manager::render()
         root->setProperty("width", view->width());
         root->setProperty("height", view->height());
 
-        connect(this, SIGNAL(reset()), root, SIGNAL(reset()));
+        connect(this, SIGNAL(reset()), root, SLOT(reset()));
 
-        connect(this, SIGNAL(info(QString)), root, SIGNAL(info(QString)));
-        connect(this, SIGNAL(error(QString)), root, SIGNAL(error(QString)));
+        connect(this, SIGNAL(info(QVariant)), root, SLOT(info(QVariant)));
+        connect(this, SIGNAL(error(QVariant)), root, SLOT(error(QVariant)));
 
         connect(root, SIGNAL(login()), this, SLOT(login()));
         connect(root, SIGNAL(reboot()), this, SLOT(reboot()));

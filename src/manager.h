@@ -8,7 +8,6 @@
 #include "x11/server.h"
 #include "pam/pam.h"
 
-#include <QApplication>
 #include <QObject>
 #include <QString>
 
@@ -40,7 +39,6 @@ private:
 
     std::unique_ptr<x11::server> server;
     std::unique_ptr<pam::context> context;
-    std::unique_ptr<QApplication> application;
 
     void render();
 

@@ -5,6 +5,7 @@
 #include "environ.h"
 #include "log.h"
 
+#include <QApplication>
 #include <QtDeclarative/QDeclarativeView>
 #include <QtDeclarative/QDeclarativeContext>
 #include <QDesktopWidget>
@@ -59,13 +60,13 @@ int Manager::run()
         context->set(pam::item::ruser, "root");
         context->set(pam::item::tty, server->name());
 
-        application.reset(new QApplication(server->display()));
-        render();
+        {
+            QApplication application(server->display());
+            render();
 
-        emit reset();
-        application->exec();
-
-        application.reset();
+            emit reset();
+            application.exec();
+        }
 
         if(_M_login)
         {
@@ -86,7 +87,6 @@ int Manager::run()
         code=1;
     }
 
-    application.reset();
     context.reset();
     server.reset();
 
@@ -105,7 +105,7 @@ void Manager::render()
         if(!QFile::exists(config.theme_file))
             throw std::runtime_error("Theme file "+ config.theme_file.toStdString()+ " not found");
 
-        QDeclarativeView* view= new QDeclarativeView(application->desktop());
+        QDeclarativeView* view= new QDeclarativeView(QApplication::desktop());
         view->rootContext()->setContextProperty("settings", &settings);
         view->setSource(QUrl::fromLocalFile(config.theme_file));
         view->setGeometry(QApplication::desktop()->screenGeometry());
@@ -146,7 +146,7 @@ void Manager::login()
             context->authenticate();
 
             _M_login= true;
-            application->quit();
+            QApplication::quit();
         }
         catch(pam::account_error&)
         {
@@ -207,7 +207,7 @@ try
     if(this_process::execute(config.reboot).code() == 0)
     {
         _M_login= false;
-        application->quit();
+        QApplication::quit();
     }
 }
 catch(execute_error& e)
@@ -224,7 +224,7 @@ try
     if(this_process::execute(config.poweroff).code() == 0)
     {
         _M_login= false;
-        application->quit();
+        QApplication::quit();
     }
 }
 catch(execute_error& e)

@@ -7,7 +7,6 @@ Rectangle {
     signal reset()
     signal info(string text)
     signal error(string text)
-    signal message(string text, color color)
     signal quit()
 
     ////////////////////////////////////////
@@ -22,7 +21,7 @@ Rectangle {
     onError: message(text, "#ff0000")
 
     ////////////////////////////////////////
-    onMessage: {
+    function message(text, color) {
         animation.stop()
         label.text = text
         label.color = color
@@ -46,9 +45,10 @@ Rectangle {
 
     ////////////////////////////////////////
     Keys.onPressed: {
-        if(event.key === Qt.Key_F1) {
+        if(event.key === Qt.Key_Escape)
+            reset()
+        if(event.key === Qt.Key_F1)
             info("F8 session, F10 reboot, F11 poweroff")
-        }
         else if(event.key === Qt.Key_F8) {
             ++sessions.index
             if(sessions.index >= sessions.text.length)
@@ -89,14 +89,12 @@ Rectangle {
         objectName: "hostname"
         width: 200
         height: 40
-        anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
         color: "#ffffff"
-        font.pointSize: 20
-        font.bold: true
-
-        verticalAlignment: Text.AlignVCenter
+        font { pointSize: 20; bold: true }
         horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
         clip: true
     }
 
@@ -105,9 +103,8 @@ Rectangle {
         width: 200
         height: 30
         radius: 2
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: 50
         anchors.horizontalCenter: parent.horizontalCenter
+        anchors { verticalCenter: parent.verticalCenter; verticalCenterOffset: 50 }
         color: "#ffffff"
 
         TextInput {
@@ -127,9 +124,8 @@ Rectangle {
         width: 200
         height: 30
         radius: 2
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: 90
         anchors.horizontalCenter: parent.horizontalCenter
+        anchors { verticalCenter: parent.verticalCenter; verticalCenterOffset: 90 }
         color: "#ffffff"
 
         TextInput {
@@ -138,7 +134,6 @@ Rectangle {
             anchors.fill: parent
             anchors.margins: username.anchors.margins
             font.pointSize: username.font.pointSize
-
             echoMode: TextInput.Password
             passwordCharacter: "*"
 
@@ -152,13 +147,11 @@ Rectangle {
         id: label
         width: 400
         height: 60
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: 150
         anchors.horizontalCenter: parent.horizontalCenter
+        anchors { verticalCenter: parent.verticalCenter; verticalCenterOffset: 150 }
         font.pointSize: 14
-
-        verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
         wrapMode: Text.WordWrap
         clip: true
     }

@@ -3,9 +3,13 @@ import QtQuick 1.1
 Rectangle {
 
     signal reset()
+
     signal info(string text)
     signal error(string text)
-    signal quit()
+
+    signal login()
+    signal reboot()
+    signal poweroff()
 
     ////////////////////////////////////////
     onReset: {
@@ -17,6 +21,11 @@ Rectangle {
     ////////////////////////////////////////
     onInfo: message(text, "#ffffff")
     onError: message(text, "#ff0000")
+
+    Connections {
+        target: settings
+        onSessionChanged: info(settings.session)
+    }
 
     ////////////////////////////////////////
     function message(text, color) {
@@ -57,23 +66,6 @@ Rectangle {
     Keys.onEscapePressed: reset()
 
     ////////////////////////////////////////
-    Item {
-        id: sessions
-        objectName: "sessions"
-        property variant text: [ ]
-        property int index: 0
-    }
-
-    ////////////////////////////////////////
-    Item {
-        id: session
-        objectName: "session"
-        property string text: ""
-
-        onTextChanged: info(text)
-    }
-
-    ////////////////////////////////////////
     Image {
         id: background
         source: "background.png"
@@ -84,7 +76,7 @@ Rectangle {
 
         ////////////////////////////////////////
         Image {
-            id: tile
+            id: panel
             source: "tile.png"
             anchors.horizontalCenter: parent.horizontalCenter
             anchors { verticalCenter: parent.verticalCenter; verticalCenterOffset: -38 }
@@ -94,8 +86,8 @@ Rectangle {
         Image {
             id: username_panel
             source: username.text ? "username_active.png": "username.png"
-            anchors.horizontalCenter: tile.horizontalCenter
-            anchors { top: tile.bottom; topMargin: 10 }
+            anchors.horizontalCenter: panel.horizontalCenter
+            anchors { top: panel.bottom; topMargin: 10 }
 
             TextInput {
                 id: username
@@ -132,13 +124,17 @@ Rectangle {
                 passwordCharacter: "*"
 
                 Keys.onTabPressed: username.focus = true
-                Keys.onReturnPressed: quit()
+                Keys.onReturnPressed: {
+                    settings.username = username.text
+                    settings.password = password.text
+                    login()
+                }
             }
         }
 
         ////////////////////////////////////////
         Image {
-            id: login
+            id: login_button
             source: login_mouse.containsMouse? "login_active.png": "login.png"
             anchors { left: password_panel.right; leftMargin: 20 }
             anchors.verticalCenter: password_panel.verticalCenter
@@ -148,7 +144,11 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
 
-                onClicked: quit()
+                onClicked: {
+                    settings.username = username.text
+                    settings.password = password.text
+                    login()
+                }
             }
         }
 
@@ -168,7 +168,7 @@ Rectangle {
 
         ////////////////////////////////////////
         Image {
-            id: session_icon
+            id: session_button
             source: session_mouse.containsMouse ? "session_active.png" : "session.png"
             anchors { left: parent.left; leftMargin: 40 }
             anchors { bottom: parent.bottom; bottomMargin: 40 }
@@ -178,17 +178,12 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
 
-                onClicked: {
-                    ++sessions.index
-                    if(sessions.index >= sessions.text.length)
-                        sessions.index = 0
-                    session.text = sessions.text[sessions.index]
-                }
+                onClicked: settings.nextSession()
             }
         }
 
         Image {
-            id: power
+            id: power_button
             source: (shutdown_mouse.containsMouse || power_mouse.containsMouse) ? "power_active.png": "power.png"
             anchors { right: parent.right; rightMargin: 40 }
             anchors { bottom: parent.bottom; bottomMargin: 40 }
@@ -201,11 +196,7 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 hoverEnabled: true
 
-                onClicked: {
-                    session.text = "poweroff"
-                    info("Shutting down")
-                    quit()
-                }
+                onClicked: poweroff()
             }
 
             MouseArea {
@@ -216,18 +207,18 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 hoverEnabled: true
 
-                onClicked: systems.visible = !systems.visible
+                onClicked: system_menu.visible = !system_menu.visible
             }
 
             Image {
-                id: systems
+                id: system_menu
                 source: "system_menu.png"
-                anchors.right: power.right
-                anchors.bottom: power.top
+                anchors.right: power_button.right
+                anchors.bottom: power_button.top
                 visible: false
 
                 Image {
-                    id: reboot
+                    id: reboot_item
                     source: "menu_item_active.png"
                     anchors { left: parent.left; leftMargin: 3 }
                     anchors { top: parent.top; topMargin: 3 }
@@ -236,19 +227,17 @@ Rectangle {
 
                 MouseArea {
                     id: reboot_mouse
-                    anchors.fill: reboot
+                    anchors.fill: reboot_item
                     hoverEnabled: true
 
                     onClicked: {
-                        session.text = "reboot"
-                        systems.visible = false
-                        info("Rebooting")
-                        quit()
+                        system_menu.visible = false
+                        reboot()
                     }
                 }
 
                 Image {
-                    id: poweroff
+                    id: poweroff_item
                     source: "menu_item_active.png"
                     anchors { left: parent.left; leftMargin: 3 }
                     anchors { top: parent.top; topMargin: 33 }
@@ -257,14 +246,12 @@ Rectangle {
 
                 MouseArea {
                     id: poweroff_mouse
-                    anchors.fill: poweroff
+                    anchors.fill: poweroff_item
                     hoverEnabled: true
 
                     onClicked: {
-                        session.text = "poweroff"
-                        systems.visible = false
-                        info("Shutting down")
-                        quit()
+                        system_menu.visible = false
+                        poweroff()
                     }
                 }
             }

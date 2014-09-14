@@ -41,27 +41,27 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
 
         settings.setSessions(sessions);
     }
+
+    ////////////////////
+    server= x11::server(config.xorg_name, config.xorg_auth, config.xorg_args);
+
+    context= pam::context(config.pam_service);
+    context.set_user_func([this](std::string& x) { x= settings.username().toStdString(); return true; });
+    context.set_pass_func([this](std::string& x) { x= settings.password().toStdString(); return true; });
+
+    context.set_error_func([this](const std::string& x) { _M_error=x; return true; });
+
+    context.set(pam::item::ruser, "root");
+    context.set(pam::item::tty, server.name());
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int Manager::run()
 {
-    int code=0;
     try
     {
-        server.reset(new x11::server(config.xorg_name, config.xorg_auth, config.xorg_args));
-
-        context.reset(new pam::context(config.pam_service));
-        context->set_user_func ([this](std::string& x) { x= settings.username().toStdString(); return true; });
-        context->set_pass_func ([this](std::string& x) { x= settings.password().toStdString(); return true; });
-
-        context->set_error_func([this](const std::string& x) { _M_error=x; return true; });
-
-        context->set(pam::item::ruser, "root");
-        context->set(pam::item::tty, server->name());
-
         {
-            QApplication application(server->display());
+            QApplication application(server.display());
             render();
 
             emit reset();
@@ -70,7 +70,7 @@ int Manager::run()
 
         if(_M_login)
         {
-            context->open_session();
+            context.open_session();
 
             QString session= settings.session();
             if(!session.size()) session= "Xsession";
@@ -78,19 +78,15 @@ int Manager::run()
             app::process process(process::group, &Manager::startup, this, session);
             process.join();
 
-            context->close_session();
+            context.close_session();
         }
+        return 0;
     }
     catch(std::exception& e)
     {
         logger << log::error << e.what() << std::endl;
-        code=1;
+        return 1;
     }
-
-    context.reset();
-    server.reset();
-
-    return code;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,9 +137,9 @@ void Manager::login()
     {
         try
         {
-            context->reset(pam::item::user);
+            context.reset(pam::item::user);
             _M_error.clear();
-            context->authenticate();
+            context.authenticate();
 
             _M_login= true;
             QApplication::quit();
@@ -167,7 +163,7 @@ void Manager::login()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int Manager::startup(const QString& sess)
 {
-    credentials c(context->get(pam::item::user));
+    credentials c(context.get(pam::item::user));
     app::environ e;
 
     std::string auth= c.home+ "/.Xauthority";
@@ -188,11 +184,11 @@ int Manager::startup(const QString& sess)
     value= this_environ::get("TERM", &found);
     if(found) e.set("TERM", value);
 
-    e.set("DISPLAY", context->get(pam::item::tty));
+    e.set("DISPLAY", context.get(pam::item::tty));
     e.set("XAUTHORITY", auth);
 
     c.morph_into();
-    server->set_cookie(auth);
+    server.set_cookie(auth);
 
     this_process::replace_e(e, (config.sessions_path+ "/"+ sess).toStdString());
     return 0;

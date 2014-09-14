@@ -11,8 +11,6 @@
 #include <QObject>
 #include <QString>
 
-#include <memory>
-
 using namespace app;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,8 +35,8 @@ private:
     Config config;
     Settings settings;
 
-    std::unique_ptr<x11::server> server;
-    std::unique_ptr<pam::context> context;
+    x11::server server;
+    pam::context context;
 
     void render();
 

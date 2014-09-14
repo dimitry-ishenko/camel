@@ -26,7 +26,13 @@ public:
 
 signals:
     void reset();
+    void info(const QString& text);
     void error(const QString& text);
+
+private slots:
+    void login();
+    void reboot();
+    void poweroff();
 
 private:
     Config config;
@@ -47,8 +53,7 @@ private:
     }
     void reset_error() { _M_error.clear(); }
 
-    bool try_auth();
-
+    bool _M_login;
     int startup(const QString& sess);
 };
 

@@ -62,41 +62,23 @@ int Manager::run()
         application.reset(new QApplication(server->display()));
         render();
 
-        QString sess;
-        while(true)
-        {
-            emit reset();
-            application->exec();
-
-            sess= settings.session();
-            if(!sess.size()) sess= "Xsession";
-
-            try
-            {
-                if(sess == "reboot")
-                    this_process::execute(config.reboot);
-
-                else if(sess == "poweroff")
-                    this_process::execute(config.poweroff);
-
-                else if(try_auth())
-                    break;
-            }
-            catch(execute_error& e)
-            {
-                emit error(e.what());
-                logger << e.what() << std::endl;
-            }
-        }
+        emit reset();
+        application->exec();
 
         application.reset();
 
-        context->open_session();
+        if(_M_login)
+        {
+            context->open_session();
 
-        app::process process(process::group, &Manager::startup, this, sess);
-        process.join();
+            QString session= settings.session();
+            if(!session.size()) session= "Xsession";
 
-        context->close_session();
+            app::process process(process::group, &Manager::startup, this, session);
+            process.join();
+
+            context->close_session();
+        }
     }
     catch(std::exception& e)
     {
@@ -133,8 +115,13 @@ void Manager::render()
         root->setProperty("height", view->height());
 
         connect(this, SIGNAL(reset()), root, SIGNAL(reset()));
+
+        connect(this, SIGNAL(info(QString)), root, SIGNAL(info(QString)));
         connect(this, SIGNAL(error(QString)), root, SIGNAL(error(QString)));
-        connect(root, SIGNAL(quit()), application.get(), SLOT(quit()));
+
+        connect(root, SIGNAL(login()), this, SLOT(login()));
+        connect(root, SIGNAL(reboot()), this, SLOT(reboot()));
+        connect(root, SIGNAL(poweroff()), this, SLOT(poweroff()));
 
         view->show();
 
@@ -148,7 +135,7 @@ void Manager::render()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-bool Manager::try_auth()
+void Manager::login()
 {
     try
     {
@@ -158,9 +145,10 @@ bool Manager::try_auth()
             reset_error();
             context->authenticate();
 
-            return true;
+            _M_login= true;
+            application->quit();
         }
-        catch(pam::account_error& e)
+        catch(pam::account_error&)
         {
             throw;
         }
@@ -172,8 +160,9 @@ bool Manager::try_auth()
 
         emit error(x.data());
         logger << x << std::endl;
+
+        emit reset();
     }
-    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,4 +197,38 @@ int Manager::startup(const QString& sess)
 
     this_process::replace_e(e, (config.sessions_path+ "/"+ sess).toStdString());
     return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::reboot()
+try
+{
+    emit info("Rebooting");
+    if(this_process::execute(config.reboot).code() == 0)
+    {
+        _M_login= false;
+        application->quit();
+    }
+}
+catch(execute_error& e)
+{
+    emit error(e.what());
+    logger << e.what() << std::endl;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::poweroff()
+try
+{
+    emit info("Powering off");
+    if(this_process::execute(config.poweroff).code() == 0)
+    {
+        _M_login= false;
+        application->quit();
+    }
+}
+catch(execute_error& e)
+{
+    emit error(e.what());
+    logger << e.what() << std::endl;
 }

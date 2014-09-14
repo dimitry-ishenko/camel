@@ -5,14 +5,12 @@ Rectangle {
     signal reset()
     signal info(string text)
     signal error(string text)
-    signal message(string text, color color)
     signal quit()
 
     ////////////////////////////////////////
     onReset: {
         username.text = ""
         password.text = ""
-
         username.focus = true
     }
 
@@ -21,7 +19,7 @@ Rectangle {
     onError: message(text, "#ff0000")
 
     ////////////////////////////////////////
-    onMessage: {
+    function message(text, color) {
         animation.stop()
         animation_color.value = color
         message_label.text = text
@@ -56,6 +54,9 @@ Rectangle {
     }
 
     ////////////////////////////////////////
+    Keys.onEscapePressed: reset()
+
+    ////////////////////////////////////////
     Item {
         id: sessions
         objectName: "sessions"
@@ -85,29 +86,26 @@ Rectangle {
         Image {
             id: tile
             source: "tile.png"
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: -38
             anchors.horizontalCenter: parent.horizontalCenter
+            anchors { verticalCenter: parent.verticalCenter; verticalCenterOffset: -38 }
         }
 
         ////////////////////////////////////////
         Image {
             id: username_panel
             source: username.text ? "username_active.png": "username.png"
-            anchors.top: tile.bottom
-            anchors.topMargin: 10
             anchors.horizontalCenter: tile.horizontalCenter
+            anchors { top: tile.bottom; topMargin: 10 }
 
             TextInput {
                 id: username
                 objectName: "username"
                 anchors.fill: parent
-                anchors.topMargin: 5
-                anchors.bottomMargin: 5
                 anchors.leftMargin: 8
                 anchors.rightMargin: 8
-                font.family: "Sans"
-                font.pixelSize: 12
+                anchors.topMargin: 5
+                anchors.bottomMargin: 5
+                font { family: "Sans"; pixelSize: 12 }
 
                 Keys.onTabPressed: password.focus = true
                 Keys.onReturnPressed: password.focus = true
@@ -118,20 +116,18 @@ Rectangle {
         Image {
             id: password_panel
             source: password.text ? "password_active.png": "password.png"
-            anchors.top: username_panel.bottom
-            anchors.topMargin: 10
             anchors.horizontalCenter: username_panel.horizontalCenter
+            anchors { top: username_panel.bottom; topMargin: 10 }
 
             TextInput {
                 id: password
                 objectName: "password"
                 anchors.fill: parent
-                anchors.topMargin: username.anchors.topMargin
-                anchors.bottomMargin: username.anchors.bottomMargin
                 anchors.leftMargin: username.anchors.leftMargin
                 anchors.rightMargin: username.anchors.rightMargin
+                anchors.topMargin: username.anchors.topMargin
+                anchors.bottomMargin: username.anchors.bottomMargin
                 font: username.font
-
                 echoMode: TextInput.Password
                 passwordCharacter: "*"
 
@@ -144,9 +140,8 @@ Rectangle {
         Image {
             id: login
             source: login_mouse.containsMouse? "login_active.png": "login.png"
+            anchors { left: password_panel.right; leftMargin: 20 }
             anchors.verticalCenter: password_panel.verticalCenter
-            anchors.left: password_panel.right
-            anchors.leftMargin: 20
 
             MouseArea {
                 id: login_mouse
@@ -162,14 +157,11 @@ Rectangle {
             id: message_label
             width: 300
             height: 40
-            anchors.top: password_panel.bottom
-            anchors.topMargin: 10
             anchors.horizontalCenter: password_panel.horizontalCenter
-            font.family: "Sans"
-            font.pixelSize: 12
-
-            verticalAlignment: Text.AlignVCenter
+            anchors { top: password_panel.bottom; topMargin: 10 }
+            font { family: "Sans"; pixelSize: 12 }
             horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
             wrapMode: Text.WordWrap
             clip: true
         }
@@ -178,10 +170,8 @@ Rectangle {
         Image {
             id: session_icon
             source: session_mouse.containsMouse ? "session_active.png" : "session.png"
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 40
-            anchors.left: parent.left
-            anchors.leftMargin: 40
+            anchors { left: parent.left; leftMargin: 40 }
+            anchors { bottom: parent.bottom; bottomMargin: 40 }
 
             MouseArea {
                 id: session_mouse
@@ -200,17 +190,15 @@ Rectangle {
         Image {
             id: power
             source: (shutdown_mouse.containsMouse || power_mouse.containsMouse) ? "power_active.png": "power.png"
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 40
-            anchors.right: parent.right
-            anchors.rightMargin: 40
+            anchors { right: parent.right; rightMargin: 40 }
+            anchors { bottom: parent.bottom; bottomMargin: 40 }
 
             MouseArea {
                 id: shutdown_mouse
                 width: 37
+                anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                anchors.left: parent.left
                 hoverEnabled: true
 
                 onClicked: {
@@ -223,9 +211,9 @@ Rectangle {
             MouseArea {
                 id: power_mouse
                 width: 20
+                anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                anchors.right: parent.right
                 hoverEnabled: true
 
                 onClicked: systems.visible = !systems.visible
@@ -234,17 +222,15 @@ Rectangle {
             Image {
                 id: systems
                 source: "system_menu.png"
-                anchors.bottom: power.top
                 anchors.right: power.right
+                anchors.bottom: power.top
                 visible: false
 
                 Image {
                     id: reboot
                     source: "menu_item_active.png"
-                    anchors.top: parent.top
-                    anchors.topMargin: 3
-                    anchors.left: parent.left
-                    anchors.leftMargin: 3
+                    anchors { left: parent.left; leftMargin: 3 }
+                    anchors { top: parent.top; topMargin: 3 }
                     visible: reboot_mouse.containsMouse ? true : false
                 }
 
@@ -264,10 +250,8 @@ Rectangle {
                 Image {
                     id: poweroff
                     source: "menu_item_active.png"
-                    anchors.top: parent.top
-                    anchors.topMargin: 33
-                    anchors.left: parent.left
-                    anchors.leftMargin: 3
+                    anchors { left: parent.left; leftMargin: 3 }
+                    anchors { top: parent.top; topMargin: 33 }
                     visible: poweroff_mouse.containsMouse ? true : false
                 }
 

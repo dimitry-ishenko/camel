@@ -3,9 +3,13 @@ import QtQuick 1.1
 Rectangle {
     ////////////////////////////////////////
     signal reset()
+
     signal info(string text)
     signal error(string text)
-    signal quit()
+
+    signal login()
+    signal reboot()
+    signal poweroff()
 
     ////////////////////////////////////////
     onReset: {
@@ -17,6 +21,11 @@ Rectangle {
     ////////////////////////////////////////
     onInfo: message(text, "#555555")
     onError: message(text, "#ff0000")
+
+    Connections {
+        target: settings
+        onSessionChanged: info(settings.session)
+    }
 
     ////////////////////////////////////////
     function message(text, color) {
@@ -57,22 +66,6 @@ Rectangle {
     Keys.onEscapePressed: reset()
 
     ////////////////////////////////////////
-    Item {
-        id: sessions
-        objectName: "sessions"
-        property variant text: [ ]
-        property int index: 0
-    }
-
-    ////////////////////////////////////////
-    Item {
-        id: session
-        objectName: "session"
-        property string text: ""
-        onTextChanged: info(text)
-    }
-
-    ////////////////////////////////////////
     Image {
         id: background
         source: "background.png"
@@ -107,6 +100,7 @@ Rectangle {
                 anchors { left: parent.left; leftMargin: 20 }
                 anchors { right: parent.right; rightMargin: 20 }
                 anchors { top: parent.top; topMargin: 20 }
+                text: settings.hostname
                 font { family: "Sans"; pointSize: 14; bold: true }
                 color: "#0b678c"
                 opacity: 0.75
@@ -213,13 +207,17 @@ Rectangle {
                     passwordCharacter: "*"
 
                     Keys.onTabPressed: username.focus = true
-                    Keys.onReturnPressed: quit()
+                    Keys.onReturnPressed: {
+                        settings.username = username.text
+                        settings.password = password.text
+                        login()
+                    }
                 }
             }
 
             ////////////////////////////////////////
             Image {
-                id: session_icon
+                id: session_button
                 source: "session_normal.png"
                 opacity: 0.9
                 anchors { left: parent.left; leftMargin: 22 }
@@ -229,17 +227,12 @@ Rectangle {
                     id: session_mouse
                     anchors.fill: parent
 
-                    onClicked: {
-                        ++sessions.index
-                        if(sessions.index >= sessions.text.length)
-                            sessions.index = 0
-                        session.text = sessions.text[sessions.index]
-                    }
+                    onClicked: settings.nextSession()
                 }
             }
 
             Image {
-                id: system_icon
+                id: system_button
                 source: "system_normal.png"
                 opacity: 0.9
                 anchors { left: parent.left; leftMargin: 50 }
@@ -247,18 +240,18 @@ Rectangle {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: systems.visible = !systems.visible
+                    onClicked: system_menu.visible = !system_menu.visible
                 }
 
                 Image {
-                    id: systems
+                    id: system_menu
                     source: "sessions.png"
-                    anchors.left: system_icon.left
-                    anchors.top: system_icon.bottom
+                    anchors.left: system_button.left
+                    anchors.top: system_button.bottom
                     visible: false
 
                     Text {
-                        id: reboot
+                        id: reboot_item
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors { top: parent.top; topMargin: 5 }
@@ -275,20 +268,15 @@ Rectangle {
                             anchors.fill: parent
                             hoverEnabled: true
 
-                            onClicked: {
-                                session.text = "reboot"
-                                systems.visible = false
-                                info("Rebooting")
-                                quit()
-                            }
+                            onClicked: reboot()
                         }
                     }
 
                     Text {
-                        id: poweroff
+                        id: poweroff_item
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        anchors.top: reboot.bottom
+                        anchors.top: reboot_item.bottom
                         anchors { bottom: parent.bottom; bottomMargin: 5 }
 
                         text: "Shutdown"
@@ -302,19 +290,14 @@ Rectangle {
                             anchors.fill: parent
                             hoverEnabled: true
 
-                            onClicked: {
-                                session.text = "poweroff"
-                                systems.visible = false
-                                info("Shutting down")
-                                quit()
-                            }
+                            onClicked: poweroff()
                         }
                     }
                 }
             }
 
             Image {
-                id: login_icon
+                id: login_button
                 source: login_mouse.containsMouse? "login_active.png": "login_normal.png"
                 anchors { right: parent.right; rightMargin: 20 }
                 anchors.verticalCenter: parent.verticalCenter
@@ -324,7 +307,11 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
 
-                    onClicked: quit()
+                    onClicked: {
+                        settings.username = username.text
+                        settings.password = password.text
+                        login()
+                    }
                 }
             }
         }

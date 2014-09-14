@@ -5,7 +5,6 @@ Rectangle {
     signal reset()
     signal info(string text)
     signal error(string text)
-    signal message(string text, color color)
     signal quit()
 
     ////////////////////////////////////////
@@ -21,7 +20,7 @@ Rectangle {
     onError: message(text, "#ff0000")
 
     ////////////////////////////////////////
-    onMessage: {
+    function message(text, color) {
         animation.stop()
         animation_color.value = color
         message_label.text = text
@@ -57,6 +56,8 @@ Rectangle {
 
     ////////////////////////////////////////
     Keys.onPressed: {
+        if(event.key === Qt.Key_Escape)
+            reset()
         if(event.key === Qt.Key_F1)
             info("F8 session F10 reboot F11 poweroff")
         else if(event.key === Qt.Key_F8) {

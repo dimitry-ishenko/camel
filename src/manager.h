@@ -38,9 +38,6 @@ private:
 
     void render();
 
-    bool get_user(std::string&);
-    bool get_pass(std::string&);
-
     std::string _M_error;
     const std::string& get_error() const { return _M_error; }
     bool set_error(const std::string& x)

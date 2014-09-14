@@ -51,8 +51,9 @@ int Manager::run()
         server.reset(new x11::server(config.xorg_name, config.xorg_auth, config.xorg_args));
 
         context.reset(new pam::context(config.pam_service));
-        context->set_user_func (std::bind(&Manager::get_user,  this, std::placeholders::_1));
-        context->set_pass_func (std::bind(&Manager::get_pass,  this, std::placeholders::_1));
+        context->set_user_func ([this](std::string& x) { x= settings.username().toStdString(); return true; });
+        context->set_pass_func ([this](std::string& x) { x= settings.password().toStdString(); return true; });
+
         context->set_error_func(std::bind(&Manager::set_error, this, std::placeholders::_1));
 
         context->set(pam::item::ruser, "root");
@@ -144,20 +145,6 @@ void Manager::render()
         QDir::setCurrent(current);
         throw;
     }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-bool Manager::get_user(std::string& value)
-{
-    value= settings.username().toStdString();
-    return true;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-bool Manager::get_pass(std::string& value)
-{
-    value= settings.password().toStdString();
-    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -4,6 +4,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include <QObject>
+#include <QDateTime>
 #include <QStringList>
 #include <QString>
 
@@ -14,6 +15,7 @@ class Settings: public QObject
 public:
     explicit Settings(QObject* parent= nullptr): QObject(parent) { }
 
+    ////////////////////
     Q_PROPERTY(QStringList sessions READ sessions NOTIFY sessionsChanged)
     const QStringList& sessions() const { return _M_sessions; }
     void setSessions(const QStringList& x)
@@ -31,6 +33,7 @@ public:
     Q_PROPERTY(QString session READ session NOTIFY sessionChanged)
     const QString& session() const;
 
+    ////////////////////
     Q_PROPERTY(QString username READ username WRITE setUsername NOTIFY usernameChanged)
     const QString& username() const { return _M_username; }
     void setUsername(const QString& x)
@@ -47,6 +50,24 @@ public:
         emit passwordChanged(x);
     }
 
+    ////////////////////
+    Q_PROPERTY(QString hostname READ hostname NOTIFY hostnameChanged)
+    const QString& hostname() const { return _M_hostname; }
+    void setHostname(const QString& x)
+    {
+        _M_hostname= x;
+        emit hostnameChanged(x);
+    }
+
+    Q_PROPERTY(QDateTime datetime READ datetime)
+    QDateTime datetime() const { return QDateTime::currentDateTime(); }
+
+    Q_PROPERTY(QDate date READ date)
+    QDate date() const { return QDate::currentDate(); }
+
+    Q_PROPERTY(QTime time READ time)
+    QTime time() const { return QTime::currentTime(); }
+
 signals:
     void sessionsChanged(const QStringList&);
     void indexChanged(int);
@@ -54,6 +75,7 @@ signals:
 
     void usernameChanged(const QString&);
     void passwordChanged(const QString&);
+    void hostnameChanged(const QString&);
 
 public slots:
     void resetSession() { setIndex(0); }
@@ -67,6 +89,7 @@ private:
 
     QString _M_username;
     QString _M_password;
+    QString _M_hostname;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

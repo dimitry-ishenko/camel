@@ -61,6 +61,7 @@ SOURCES += \
     lib/process/process.cpp         \
     lib/x11/server.cpp              \
     src/config.cpp                  \
+    src/settings.cpp                \
     src/credentials.cpp             \
     src/manager.cpp                 \
     src/main.cpp                    \
@@ -80,6 +81,7 @@ HEADERS += \
     lib/process/process.h           \
     lib/x11/server.h                \
     src/config.h                    \
+    src/settings.h                  \
     src/credentials.h               \
     src/manager.h                   \
 

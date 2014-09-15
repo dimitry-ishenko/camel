@@ -2,79 +2,78 @@ import QtQuick 1.1
 
 Rectangle {
     ////////////////////////////////////////
-    signal reset()
-
-    signal info(string text)
-    signal error(string text)
-
     signal login()
+    signal change_pass()
     signal reboot()
     signal poweroff()
 
     ////////////////////////////////////////
-    onReset: {
+    function reset() {
+        username.enabled = true
         username.text = ""
         password.text = ""
+        settings.username = ""
         username.focus = true
     }
 
-    ////////////////////////////////////////
-    onInfo: message(text, "#555555")
-    onError: message(text, "#ff0000")
+    function reset_pass() {
+        username.enabled = false
+        password.text = ""
+        password.focus = true
+        settings.password_n = ""
+        enter_animation.start()
+    }
 
+    SequentialAnimation {
+        id: enter_animation
+        PauseAnimation { duration: 2000 }
+        ScriptAction { script: info("Enter new password") }
+    }
+
+    ////////////////////////////////////////
+    function info(text) { message(text, "#555555") }
+    function error(text) { message(text, "#ff0000") }
+
+    function message(text, color) {
+        message_animation.stop()
+        message_label.text = text
+        message_label.color = color
+        message_label.opacity = 1
+        message_animation.start()
+    }
+
+    ////////////////////////////////////////
+    SequentialAnimation {
+        id: message_animation
+        PauseAnimation { duration: 4000 }
+        PropertyAnimation {
+            target: message_label
+            property: "opacity"
+            from: 1; to: 0; duration: 300
+            easing.type: Easing.InQuad
+        }
+    }
+
+    ////////////////////////////////////////
     Connections {
         target: settings
         onSessionChanged: info(settings.session)
     }
 
     ////////////////////////////////////////
-    function message(text, color) {
-        animation.stop()
-        animation_color.value = color
-        message_label.text = text
-        animation.start()
-    }
-
-    SequentialAnimation {
-        id: animation
-
-        PropertyAction {
-            id: animation_color
-            target: message_label
-            property: "color"
-            value: "white"
-        }
-        PropertyAction {
-            target: message_label
-            property: "opacity"
-            value: 1
-        }
-        PauseAnimation {
-            duration: 4000
-        }
-        PropertyAnimation {
-            target: message_label
-            property: "opacity"
-            from: 1
-            to: 0
-            duration: 300
-            easing.type: Easing.InQuad
-        }
-    }
-
-    ////////////////////////////////////////
     Keys.onPressed: {
-        switch(event.key) {
-            case Qt.Key_Escape: reset()
-                break
-            case Qt.Key_F1: info("F8 session F10 reboot F11 poweroff")
-                break
-            case Qt.Key_F8: settings.nextSession()
-                break
-            case Qt.Key_F10: reboot()
-                break
-            case Qt.Key_F11: poweroff()
-                break
+        if(event.key === Qt.Key_Escape)
+            reset();
+
+        else if(settings.username === "") switch(event.key) {
+        case Qt.Key_F1: info("F8 session F10 reboot F11 poweroff")
+            break
+        case Qt.Key_F8: settings.nextSession()
+            break
+        case Qt.Key_F10: reboot()
+            break
+        case Qt.Key_F11: poweroff()
+            break
         }
     }
 
@@ -220,9 +219,21 @@ Rectangle {
 
                         Keys.onTabPressed: username.focus = true
                         Keys.onReturnPressed: {
-                            settings.username = username.text
-                            settings.password = password.text
-                            login()
+                            if(settings.username === "") {
+                                settings.username = username.text
+                                settings.password = password.text
+                                login()
+                            }
+                            else if(settings.password_n === "") {
+                                settings.password_n = password.text
+                                password.text = ""
+                                info("Retype new password")
+                            }
+                            else if(password.text !== settings.password_n) {
+                                error("Passwords don't match")
+                                reset_pass()
+                            }
+                            else change_pass()
                         }
                     }
                 }

@@ -218,10 +218,18 @@ int Manager::startup(const QString& sess)
 void Manager::change_pass()
 try
 {
-    context.change_pass();
+    if(settings.newpass2() == settings.newpass())
+    {
+        context.change_pass();
 
-    emit info("Password changed");
-    emit reset();
+        emit info("Password changed");
+        emit reset();
+    }
+    else
+    {
+        emit error("Passwords don't match");
+        emit reset_pass();
+    }
 }
 catch(pam::pass_error& e)
 {

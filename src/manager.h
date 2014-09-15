@@ -46,6 +46,9 @@ private:
     bool username(const std::string& message, std::string& value);
     bool password(const std::string& message, std::string& value);
 
+    bool _M_show;
+    bool response(const std::string& message);
+
     bool _M_login;
 
     int startup(const QString& sess);

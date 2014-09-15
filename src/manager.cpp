@@ -46,10 +46,9 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
     server= x11::server(config.xorg_name, config.xorg_auth, config.xorg_args);
 
     context= pam::context(config.pam_service);
-    context.set_user_func(std::bind(&Manager::username, this, std::placeholders::_1, std::placeholders::_2));
-    context.set_pass_func(std::bind(&Manager::password, this, std::placeholders::_1, std::placeholders::_2));
-
-    context.set_error_func([this](const std::string& x) { emit error(QString::fromStdString(x)); return true; });
+    context.set_user_func (std::bind(&Manager::username, this, std::placeholders::_1, std::placeholders::_2));
+    context.set_pass_func (std::bind(&Manager::password, this, std::placeholders::_1, std::placeholders::_2));
+    context.set_error_func(std::bind(&Manager::response, this, std::placeholders::_1));
 
     context.set(pam::item::ruser, "root");
     context.set(pam::item::tty, server.name());
@@ -149,12 +148,24 @@ bool Manager::password(const std::string& message, std::string& value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+bool Manager::response(const std::string& message)
+{
+    if(_M_show)
+    {
+        emit error(QString::fromStdString(message));
+        _M_show= false;
+    }
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::login()
 try
 {
     try
     {
         context.reset(pam::item::user);
+        _M_show= true;
         context.authenticate();
 
         _M_login= true;
@@ -164,9 +175,7 @@ try
     {
         if(e.code() == pam::errc::new_authtok_reqd)
         {
-            emit error("Your password has expired");
             logger << e.what() << std::endl;
-
             emit reset_pass();
         }
         else throw;
@@ -174,7 +183,7 @@ try
 }
 catch(pam::pamh_error& e)
 {
-    emit error(e.what());
+    response(e.what());
     logger << e.what() << std::endl;
 
     emit reset();
@@ -220,6 +229,7 @@ try
 {
     if(settings.newpass2() == settings.newpass())
     {
+        _M_show= true;
         context.change_pass();
 
         emit info("Password changed");
@@ -233,9 +243,8 @@ try
 }
 catch(pam::pass_error& e)
 {
-    emit error("Failed to change the password");
+    response(e.what());
     logger << e.what() << std::endl;
-
     emit reset_pass();
 }
 

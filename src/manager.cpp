@@ -57,36 +57,34 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int Manager::run()
+try
 {
-    try
     {
-        {
-            QApplication application(server.display());
-            render();
+        QApplication application(server.display());
+        render();
 
-            emit reset();
-            application.exec();
-        }
-
-        if(_M_login)
-        {
-            context.open_session();
-
-            QString session= settings.session();
-            if(!session.size()) session= "Xsession";
-
-            app::process process(process::group, &Manager::startup, this, session);
-            process.join();
-
-            context.close_session();
-        }
-        return 0;
+        emit reset();
+        application.exec();
     }
-    catch(std::exception& e)
+
+    if(_M_login)
     {
-        logger << log::error << e.what() << std::endl;
-        return 1;
+        context.open_session();
+
+        QString session= settings.session();
+        if(!session.size()) session= "Xsession";
+
+        app::process process(process::group, &Manager::startup, this, session);
+        process.join();
+
+        context.close_session();
     }
+    return 0;
+}
+catch(std::exception& e)
+{
+    logger << log::error << e.what() << std::endl;
+    return 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,36 +150,34 @@ bool Manager::password(const std::string& message, std::string& value)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::login()
+try
 {
     try
     {
-        try
-        {
-            context.reset(pam::item::user);
-            context.authenticate();
+        context.reset(pam::item::user);
+        context.authenticate();
 
-            _M_login= true;
-            QApplication::quit();
-        }
-        catch(pam::account_error& e)
-        {
-            if(e.code() == pam::errc::new_authtok_reqd)
-            {
-                emit error("Your password has expired");
-                logger << e.what() << std::endl;
-
-                emit reset_pass();
-            }
-            else throw;
-        }
+        _M_login= true;
+        QApplication::quit();
     }
-    catch(pam::pamh_error& e)
+    catch(pam::account_error& e)
     {
-        emit error(e.what());
-        logger << e.what() << std::endl;
+        if(e.code() == pam::errc::new_authtok_reqd)
+        {
+            emit error("Your password has expired");
+            logger << e.what() << std::endl;
 
-        emit reset();
+            emit reset_pass();
+        }
+        else throw;
     }
+}
+catch(pam::pamh_error& e)
+{
+    emit error(e.what());
+    logger << e.what() << std::endl;
+
+    emit reset();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -4,6 +4,7 @@
 #include "pam/pam_error.h"
 #include "environ.h"
 #include "log.h"
+#include "errno_error.h"
 
 #include <QApplication>
 #include <QtDeclarative/QDeclarativeView>
@@ -220,18 +221,29 @@ int Manager::startup(const QString& sess)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::change_pass()
-try
 {
-    _M_show= true;
-    context.change_pass();
+    bool morphed= false;
+    try
+    {
+        if(getuid()==0)
+        {
+            credentials user(context.get(pam::item::user));
+            if(setresuid(user.uid, -1, -1)) throw errno_error();
+            morphed= true;
+        }
 
-    emit info("Password changed");
-    emit reset();
-}
-catch(pam::pass_error& e)
-{
-    response(e.what());
-    emit reset_pass();
+        _M_show= true;
+        context.change_pass();
+
+        emit info("Password changed");
+        emit reset();
+    }
+    catch(pam::pass_error& e)
+    {
+        response(e.what());
+        emit reset_pass();
+    }
+    if(morphed) if(setresuid(0, -1, -1)) throw errno_error();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

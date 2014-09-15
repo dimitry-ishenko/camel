@@ -174,18 +174,13 @@ try
     catch(pam::account_error& e)
     {
         if(e.code() == pam::errc::new_authtok_reqd)
-        {
-            logger << e.what() << std::endl;
             emit reset_pass();
-        }
         else throw;
     }
 }
 catch(pam::pamh_error& e)
 {
     response(e.what());
-    logger << e.what() << std::endl;
-
     emit reset();
 }
 
@@ -236,7 +231,6 @@ try
 catch(pam::pass_error& e)
 {
     response(e.what());
-    logger << e.what() << std::endl;
     emit reset_pass();
 }
 

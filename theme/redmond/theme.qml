@@ -1,69 +1,85 @@
 import QtQuick 1.1
 
 Rectangle {
-
-    signal reset()
-
-    signal info(string text)
-    signal error(string text)
-
+    ////////////////////////////////////////
     signal login()
+    signal change_pass()
     signal reboot()
     signal poweroff()
 
     ////////////////////////////////////////
-    onReset: {
+    function reset() {
+        username.enabled = true
         username.text = ""
         password.text = ""
+        settings.username = ""
         username.focus = true
     }
 
-    ////////////////////////////////////////
-    onInfo: message(text, "#ffffff")
-    onError: message(text, "#ff0000")
-
-    Connections {
-        target: settings
-        onSessionChanged: info(settings.session)
-    }
-
-    ////////////////////////////////////////
-    function message(text, color) {
-        animation.stop()
-        animation_color.value = color
-        message_label.text = text
-        animation.start()
+    function reset_pass() {
+        username.enabled = false
+        password.text = ""
+        password.focus = true
+        settings.password_n = ""
+        enter_animation.start()
     }
 
     SequentialAnimation {
-        id: animation
+        id: enter_animation
+        PauseAnimation { duration: 2000 }
+        ScriptAction { script: info("Enter new password") }
+    }
 
-        PropertyAction {
-            id: animation_color
-            target: message_label
-            property: "color"
-            value: "white"
-        }
-        PropertyAction {
-            target: message_label
-            property: "opacity"
-            value: 1
-        }
-        PauseAnimation {
-            duration: 4000
-        }
+    ////////////////////////////////////////
+    function info(text) { message(text, "#ffffff") }
+    function error(text) { message(text, "#ff0000") }
+
+    function message(text, color) {
+        message_animation.stop()
+        message_label.text = text
+        message_label.color = color
+        message_label.opacity = 1
+        message_animation.start()
+    }
+
+    ////////////////////////////////////////
+    SequentialAnimation {
+        id: message_animation
+        PauseAnimation { duration: 4000 }
         PropertyAnimation {
             target: message_label
             property: "opacity"
-            from: 1
-            to: 0
-            duration: 300
+            from: 1; to: 0; duration: 300
             easing.type: Easing.InQuad
         }
     }
 
     ////////////////////////////////////////
+    Connections {
+        target: settings
+        onSessionChanged: info(settings.session)
+    }
+
     Keys.onEscapePressed: reset()
+
+    ////////////////////////////////////////
+    function process() {
+        if(settings.username === "") {
+            settings.username = username.text
+            settings.password = password.text
+            login()
+        }
+        else if(settings.password_n === "") {
+            settings.password_n = password.text
+            password.text = ""
+            info("Retype new password")
+        }
+        else if(password.text !== settings.password_n) {
+            error("Passwords don't match")
+            reset_pass()
+        }
+        else change_pass()
+    }
 
     ////////////////////////////////////////
     Image {
@@ -124,11 +140,7 @@ Rectangle {
                 passwordCharacter: "*"
 
                 Keys.onTabPressed: username.focus = true
-                Keys.onReturnPressed: {
-                    settings.username = username.text
-                    settings.password = password.text
-                    login()
-                }
+                Keys.onReturnPressed: process()
             }
         }
 
@@ -144,11 +156,7 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
 
-                onClicked: {
-                    settings.username = username.text
-                    settings.password = password.text
-                    login()
-                }
+                onClicked: process()
             }
         }
 

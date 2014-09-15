@@ -23,11 +23,14 @@ public:
 
 signals:
     void reset();
+    void reset_pass();
+
     void info(const QVariant& text);
     void error(const QVariant& text);
 
 private slots:
     void login();
+    void change_pass();
     void reboot();
     void poweroff();
 
@@ -40,7 +43,9 @@ private:
 
     void render();
 
-    std::string _M_error;
+    bool username(const std::string& message, std::string& value);
+    bool password(const std::string& message, std::string& value);
+
     bool _M_login;
 
     int startup(const QString& sess);

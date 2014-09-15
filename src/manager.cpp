@@ -46,10 +46,10 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
     server= x11::server(config.xorg_name, config.xorg_auth, config.xorg_args);
 
     context= pam::context(config.pam_service);
-    context.set_user_func([this](std::string& x) { x= settings.username().toStdString(); return true; });
-    context.set_pass_func([this](std::string& x) { x= settings.password().toStdString(); return true; });
+    context.set_user_func(std::bind(&Manager::username, this, std::placeholders::_1, std::placeholders::_2));
+    context.set_pass_func(std::bind(&Manager::password, this, std::placeholders::_1, std::placeholders::_2));
 
-    context.set_error_func([this](const std::string& x) { _M_error=x; return true; });
+    context.set_error_func([this](const std::string& x) { emit error(QString::fromStdString(x)); return true; });
 
     context.set(pam::item::ruser, "root");
     context.set(pam::item::tty, server.name());
@@ -111,11 +111,14 @@ void Manager::render()
         root->setProperty("height", view->height());
 
         connect(this, SIGNAL(reset()), root, SLOT(reset()));
+        connect(this, SIGNAL(reset_pass()), root, SLOT(reset_pass()));
 
         connect(this, SIGNAL(info(QVariant)), root, SLOT(info(QVariant)));
         connect(this, SIGNAL(error(QVariant)), root, SLOT(error(QVariant)));
 
         connect(root, SIGNAL(login()), this, SLOT(login()));
+        connect(root, SIGNAL(change_pass()), this, SLOT(change_pass()));
+
         connect(root, SIGNAL(reboot()), this, SLOT(reboot()));
         connect(root, SIGNAL(poweroff()), this, SLOT(poweroff()));
 
@@ -131,6 +134,23 @@ void Manager::render()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+bool Manager::username(const std::string&, std::string& value)
+{
+    value= settings.username().toStdString();
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+bool Manager::password(const std::string& message, std::string& value)
+{
+    bool found= message.find("new") != std::string::npos
+             || message.find("New") != std::string::npos
+             || message.find("NEW") != std::string::npos;
+    value= found? settings.newpass().toStdString(): settings.password().toStdString();
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::login()
 {
     try
@@ -138,23 +158,27 @@ void Manager::login()
         try
         {
             context.reset(pam::item::user);
-            _M_error.clear();
             context.authenticate();
 
             _M_login= true;
             QApplication::quit();
         }
-        catch(pam::account_error&)
+        catch(pam::account_error& e)
         {
-            throw;
+            if(e.code() == pam::errc::new_authtok_reqd)
+            {
+                emit error("Your password has expired");
+                logger << e.what() << std::endl;
+
+                emit reset_pass();
+            }
+            else throw;
         }
     }
     catch(pam::pamh_error& e)
     {
-        std::string x= _M_error.empty()? e.what(): _M_error;
-
-        emit error(x.data());
-        logger << x << std::endl;
+        emit error(e.what());
+        logger << e.what() << std::endl;
 
         emit reset();
     }
@@ -192,6 +216,23 @@ int Manager::startup(const QString& sess)
 
     this_process::replace_e(e, (config.sessions_path+ "/"+ sess).toStdString());
     return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::change_pass()
+try
+{
+    context.change_pass();
+
+    emit info("Password changed");
+    emit reset();
+}
+catch(pam::pass_error& e)
+{
+    emit error("Failed to change the password");
+    logger << e.what() << std::endl;
+
+    emit reset_pass();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

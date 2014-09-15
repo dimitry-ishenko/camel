@@ -143,7 +143,7 @@ bool Manager::password(const std::string& message, std::string& value)
     bool found= message.find("new") != std::string::npos
              || message.find("New") != std::string::npos
              || message.find("NEW") != std::string::npos;
-    value= found? settings.newpass().toStdString(): settings.password().toStdString();
+    value= found? settings.password_n().toStdString(): settings.password().toStdString();
     return true;
 }
 
@@ -227,19 +227,11 @@ int Manager::startup(const QString& sess)
 void Manager::change_pass()
 try
 {
-    if(settings.newpass2() == settings.newpass())
-    {
-        _M_show= true;
-        context.change_pass();
+    _M_show= true;
+    context.change_pass();
 
-        emit info("Password changed");
-        emit reset();
-    }
-    else
-    {
-        emit error("Passwords don't match");
-        emit reset_pass();
-    }
+    emit info("Password changed");
+    emit reset();
 }
 catch(pam::pass_error& e)
 {

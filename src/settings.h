@@ -51,20 +51,12 @@ public:
     }
 
     ////////////////////
-    Q_PROPERTY(QString newpass READ newpass WRITE setNewpass NOTIFY newpassChanged)
-    const QString& newpass() const { return _M_newpass; }
-    void setNewpass(const QString& x)
+    Q_PROPERTY(QString password_n READ password_n WRITE setPassword_n NOTIFY password_nChanged)
+    const QString& password_n() const { return _M_password_n; }
+    void setPassword_n(const QString& x)
     {
-        _M_newpass= x;
-        emit newpassChanged(x);
-    }
-
-    Q_PROPERTY(QString newpass2 READ newpass2 WRITE setNewpass2 NOTIFY newpass2Changed)
-    const QString& newpass2() const { return _M_newpass2; }
-    void setNewpass2(const QString& x)
-    {
-        _M_newpass2= x;
-        emit newpass2Changed(x);
+        _M_password_n= x;
+        emit password_nChanged(x);
     }
 
     ////////////////////
@@ -94,8 +86,7 @@ signals:
     void passwordChanged(const QString&);
     void hostnameChanged(const QString&);
 
-    void newpassChanged(const QString&);
-    void newpass2Changed(const QString&);
+    void password_nChanged(const QString&);
 
 public slots:
     void resetSession() { setIndex(0); }
@@ -108,7 +99,7 @@ private:
     int _M_index;
 
     QString _M_username;
-    QString _M_password, _M_newpass, _M_newpass2;
+    QString _M_password, _M_password_n;
     QString _M_hostname;
 };
 

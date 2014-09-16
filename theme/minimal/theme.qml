@@ -1,173 +1,193 @@
 import QtQuick 1.1
 
-Rectangle {
+Rectangle
+{
     id: root
     color: "#000000"
 
     ////////////////////////////////////////
-    signal login()
-    signal change_pass()
+    signal enter()
+    signal cancel()
+
     signal reboot()
     signal poweroff()
 
     ////////////////////////////////////////
-    function reset() {
-        username.enabled = true
-        username.text = ""
-        password.text = ""
-        settings.username = ""
-        username.focus = true
+    function info(text)
+    {
+        info_text.color = "#ffffff"
+        info_text.text = text
+        info_anim.restart()
     }
 
-    function reset_pass() {
-        username.enabled = false
-        password.text = ""
-        password.focus = true
-        settings.password_n = ""
-        enter_animation.start()
-    }
-
-    SequentialAnimation {
-        id: enter_animation
-        PauseAnimation { duration: 2000 }
-        ScriptAction { script: info("Enter new password") }
+    function error(text)
+    {
+        info_text.color = "#ff0000"
+        info_text.text = text
+        info_anim.restart()
     }
 
     ////////////////////////////////////////
-    function info(text) { message(text, "#ffffff") }
-    function error(text) { message(text, "#ff0000") }
+    function enter_user_pass(text)
+    {
+        user_input.text = ""
+        user_input.enabled = true
+        user_input.focus = true
 
-    function message(text, color) {
-        message_animation.stop()
-        label.text = text
-        label.color = color
-        label.opacity = 1
-        message_animation.start()
+        pass_input.text = ""
+        pass_input.enabled = true
+
+        if(text) info(text)
+    }
+
+    function enter_pass(text)
+    {
+        user_input.enabled = false
+
+        pass_input.text = ""
+        pass_input.enabled = true
+        pass_input.focus = true
+
+        if(text) info(text)
     }
 
     ////////////////////////////////////////
-    SequentialAnimation {
-        id: message_animation
-        PauseAnimation { duration: 4000; }
-        PropertyAnimation {
-            target: label
-            property: "opacity"
-            from: 1; to: 0; duration: 300
-            easing.type: Easing.InQuad
-        }
-    }
-
-    ////////////////////////////////////////
-    Connections {
+    Connections
+    {
         target: settings
         onSessionChanged: info(settings.session)
     }
 
-    ////////////////////////////////////////
-    Keys.onPressed: {
-        if(event.key === Qt.Key_Escape)
-            reset();
+    onEnter:
+    {
+        user_input.enabled = false
+        pass_input.enabled = false
+    }
 
-        else if(settings.username === "") switch(event.key) {
-        case Qt.Key_F1: info("F8 session, F10 reboot, F11 poweroff")
-            break
-        case Qt.Key_F8: settings.nextSession()
-            break
-        case Qt.Key_F10: reboot()
-            break
-        case Qt.Key_F11: poweroff()
-            break
+    ////////////////////////////////////////
+    Keys.onPressed:
+        if(event.key == Qt.Key_F1)
+            info("F8 session, F10 reboot, F11 poweroff")
+        else if(event.key == Qt.Key_F8)
+            settings.nextSession()
+        else if(event.key == Qt.Key_F10)
+            reboot()
+        else if(event.key == Qt.Key_F11)
+            poweroff()
+
+    ////////////////////////////////////////
+    Rectangle
+    {
+        id: user_rect
+        width: 200; height: 30
+        anchors { horizontalCenter: parent.horizontalCenter }
+        anchors { verticalCenter: parent.verticalCenter; verticalCenterOffset: 50 }
+        color: "#ffffff"
+        radius: 2
+
+        TextInput
+        {
+            id: user_input
+            anchors.fill: parent
+            anchors.margins: 3
+            font.pointSize: 14
+            enabled: false
+
+            Keys.onPressed:
+                if(event.key == Qt.Key_Return || event.key == Qt.Key_Tab)
+                {
+                    settings.username = user_input.text
+                    pass_input.focus = true
+                    event.accepted = true
+                }
+                else if(event.key === Qt.Key_Escape)
+                {
+                    cancel()
+                    event.accepted = true
+                }
         }
     }
 
     ////////////////////////////////////////
-    Text {
-        id: hostname
-        objectName: "hostname"
-        width: 200
-        height: 40
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        text: settings.hostname
+    Rectangle
+    {
+        id: pass_rect
+        width: user_rect.width
+        height: user_rect.height
+        anchors { horizontalCenter: user_rect.horizontalCenter }
+        anchors { top: user_rect.bottom; topMargin: 20 }
         color: "#ffffff"
-        font { pointSize: 20; bold: true }
+        radius: user_rect.radius
+
+        TextInput
+        {
+            id: pass_input
+            anchors.fill: parent
+            anchors.margins: user_input.anchors.margins
+            font.pointSize: user_input.font.pointSize
+            enabled: false
+            echoMode: TextInput.Password
+            passwordCharacter: "*"
+
+            Keys.onPressed:
+                if(event.key == Qt.Key_Return)
+                {
+                    settings.password = pass_input.text
+                    enter()
+                    event.accepted = true
+                }
+                else if(event.key == Qt.Key_Tab)
+                {
+                    user_input.focus = true
+                    event.accepted = true
+                }
+                else if(event.key == Qt.Key_Escape)
+                {
+                    cancel()
+                    event.accepted = true
+                }
+        }
+    }
+
+    ////////////////////////////////////////
+    SequentialAnimation
+    {
+        id: info_anim
+        PropertyAction { target: info_text; property: "opacity"; value: 1 }
+        PauseAnimation { duration: 3000; }
+        PropertyAnimation
+        {
+            target: info_text
+            property: "opacity"
+            to: 0
+            duration: 300
+        }
+    }
+
+    ////////////////////////////////////////
+    Text
+    {
+        id: info_text
+        width: 400; height: 80
+        anchors { horizontalCenter: pass_rect.horizontalCenter }
+        anchors { top: pass_rect.bottom; topMargin: 20 }
+        font.pointSize: 14
         horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+        wrapMode: Text.WordWrap
         clip: true
     }
 
     ////////////////////////////////////////
-    Rectangle {
-        width: 200
-        height: 30
-        radius: 2
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors { verticalCenter: parent.verticalCenter; verticalCenterOffset: 50 }
+    Text
+    {
+        id: name_text
+        width: 200; height: 40
+        anchors { horizontalCenter: user_rect.horizontalCenter }
+        anchors { bottom: user_rect.top; bottomMargin: 20 }
+        text: settings.hostname
         color: "#ffffff"
-
-        TextInput {
-            id: username
-            objectName: "username"
-            anchors.fill: parent
-            anchors.margins: 3
-            font.pointSize: 14
-
-            Keys.onTabPressed: password.focus = true
-            Keys.onReturnPressed: password.focus = true
-        }
-    }
-
-    ////////////////////////////////////////
-    Rectangle {
-        width: 200
-        height: 30
-        radius: 2
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors { verticalCenter: parent.verticalCenter; verticalCenterOffset: 90 }
-        color: "#ffffff"
-
-        TextInput {
-            id: password
-            objectName: "password"
-            anchors.fill: parent
-            anchors.margins: username.anchors.margins
-            font.pointSize: username.font.pointSize
-            echoMode: TextInput.Password
-            passwordCharacter: "*"
-
-            Keys.onTabPressed: username.focus = true
-
-            Keys.onReturnPressed: {
-                if(settings.username === "") {
-                    settings.username = username.text
-                    settings.password = password.text
-                    login()
-                }
-                else if(settings.password_n === "") {
-                    settings.password_n = password.text
-                    password.text = ""
-                    info("Retype new password")
-                }
-                else if(password.text !== settings.password_n) {
-                    error("Passwords don't match")
-                    reset_pass()
-                }
-                else change_pass()
-            }
-        }
-    }
-
-    ////////////////////////////////////////
-    Text {
-        id: label
-        width: 400
-        height: 60
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors { verticalCenter: parent.verticalCenter; verticalCenterOffset: 150 }
-        font.pointSize: 14
+        font { pointSize: 20; bold: true }
         horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        wrapMode: Text.WordWrap
         clip: true
     }
 }

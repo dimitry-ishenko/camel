@@ -12,6 +12,7 @@
 #include <QDesktopWidget>
 #include <QGraphicsObject>
 #include <QtNetwork/QHostInfo>
+#include <QTimer>
 #include <QDir>
 #include <QFile>
 #include <QStringList>
@@ -47,8 +48,7 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
     server= x11::server(config.xorg_name, config.xorg_auth, config.xorg_args);
 
     context= pam::context(config.pam_service);
-    context.set_user_func (std::bind(&Manager::username, this, std::placeholders::_1, std::placeholders::_2));
-    context.set_pass_func (std::bind(&Manager::password, this, std::placeholders::_1, std::placeholders::_2));
+    context.set_pass_func(std::bind(&Manager::password, this, std::placeholders::_1, std::placeholders::_2));
     context.set_error_func(std::bind(&Manager::response, this, std::placeholders::_1));
 
     context.set(pam::item::ruser, "root");
@@ -56,29 +56,40 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::enter()
+{
+    QApplication::exit(code_enter);
+}
+void Manager::cancel()
+{
+    QApplication::exit(code_cancel);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 int Manager::run()
 try
 {
     {
-        QApplication application(server.display());
+        QApplication app(server.display());
         render();
+        app.flush();
 
-        emit reset();
-        application.exec();
+        while(true)
+        {
+            emit enter_user_pass();
+            if(QApplication::exec() == code_enter && authenticate()) break;
+        }
     }
 
-    if(_M_login)
-    {
-        context.open_session();
+    context.open_session();
 
-        QString session= settings.session();
-        if(!session.size()) session= "Xsession";
+    QString session= settings.session();
+    if(!session.size()) session= "Xsession";
 
-        app::process process(process::group, &Manager::startup, this, session);
-        process.join();
+    app::process process(process::group, &Manager::startup, this, session);
+    process.join();
 
-        context.close_session();
-    }
+    context.close_session();
     return 0;
 }
 catch(std::exception& e)
@@ -108,15 +119,14 @@ void Manager::render()
         root->setProperty("width", view->width());
         root->setProperty("height", view->height());
 
-        connect(this, SIGNAL(reset()), root, SLOT(reset()));
-        connect(this, SIGNAL(reset_pass()), root, SLOT(reset_pass()));
-
         connect(this, SIGNAL(info(QVariant)), root, SLOT(info(QVariant)));
         connect(this, SIGNAL(error(QVariant)), root, SLOT(error(QVariant)));
 
-        connect(root, SIGNAL(login()), this, SLOT(login()));
-        connect(root, SIGNAL(change_pass()), this, SLOT(change_pass()));
+        connect(this, SIGNAL(enter_user_pass(QVariant)), root, SLOT(enter_user_pass(QVariant)));
+        connect(this, SIGNAL(enter_pass(QVariant)), root, SLOT(enter_pass(QVariant)));
 
+        connect(root, SIGNAL(enter()), this, SLOT(enter()));
+        connect(root, SIGNAL(cancel()), this, SLOT(cancel()));
         connect(root, SIGNAL(reboot()), this, SLOT(reboot()));
         connect(root, SIGNAL(poweroff()), this, SLOT(poweroff()));
 
@@ -132,82 +142,100 @@ void Manager::render()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-bool Manager::username(const std::string&, std::string& value)
-{
-    value= settings.username().toStdString();
-    return true;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Manager::password(const std::string& message, std::string& value)
 {
-    bool found= message.find("new") != std::string::npos
-             || message.find("New") != std::string::npos
-             || message.find("NEW") != std::string::npos;
-    value= found? settings.password_n().toStdString(): settings.password().toStdString();
+    bool x= message.find("new") != std::string::npos
+         || message.find("New") != std::string::npos
+         || message.find("NEW") != std::string::npos;
+    value= x? settings.password_n().toStdString(): settings.password().toStdString();
     return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Manager::response(const std::string& message)
 {
-    if(_M_show)
+    if(do_respond)
     {
         emit error(QString::fromStdString(message));
-        _M_show= false;
+        do_respond= false;
     }
     return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::login()
+bool Manager::authenticate()
 try
 {
     try
     {
-        context.reset(pam::item::user);
-        _M_show= true;
+        context.set(pam::item::user, settings.username().toStdString());
+        do_respond= true;
         context.authenticate();
 
-        _M_login= true;
-        QApplication::quit();
+        return true;
     }
     catch(pam::account_error& e)
     {
         if(e.code() == pam::errc::new_authtok_reqd)
-            emit reset_pass();
+        {
+            QString password= settings.password();
+
+            while(true)
+            {
+                QTimer::singleShot(3000, this, SLOT(enter()));
+                QApplication::exec();
+
+                emit enter_pass("Enter new password");
+                if(QApplication::exec() == code_cancel) break;
+
+                QString password_n= settings.password();
+
+                emit enter_pass("Retype new password");
+                if(QApplication::exec() == code_cancel) break;
+
+                if(settings.password() == password_n)
+                {
+                    settings.setPassword(password);
+                    settings.setPassword_n(password_n);
+
+                    if(change_password()) break;
+                }
+                else emit error("Passwords don't match");
+            }
+            return false;
+        }
         else throw;
     }
 }
 catch(pam::pamh_error& e)
 {
     response(e.what());
-    emit reset();
+    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int Manager::startup(const QString& sess)
+int Manager::startup(const QString& session)
 {
     credentials c(context.get(pam::item::user));
     app::environ e;
 
     std::string auth= c.home()+ "/.Xauthority";
 
+    std::string x;
     bool found;
-    std::string value;
 
     e.set("USER", c.username());
     e.set("LOGNAME", c.username());
     e.set("HOME", c.home());
 
-    value= this_environ::get("PATH", &found);
-    if(found) e.set("PATH", value);
+    x= this_environ::get("PATH", &found);
+    if(found) e.set("PATH", x);
 
     e.set("PWD", c.home());
     e.set("SHELL", c.shell());
 
-    value= this_environ::get("TERM", &found);
-    if(found) e.set("TERM", value);
+    x= this_environ::get("TERM", &found);
+    if(found) e.set("TERM", x);
 
     e.set("DISPLAY", context.get(pam::item::tty));
     e.set("XAUTHORITY", auth);
@@ -215,35 +243,32 @@ int Manager::startup(const QString& sess)
     c.morph_into();
     server.set_cookie(auth);
 
-    this_process::replace_e(e, (config.sessions_path+ "/"+ sess).toStdString());
-    return 0;
+    this_process::replace_e(e, (config.sessions_path+ "/"+ session).toStdString());
+    return 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::change_pass()
+bool Manager::change_password()
 {
-    bool morphed= false;
+    app::uid orig_uid= this_user::uid();
+    this_user::morph_into( credentials(context.get(pam::item::user)).uid(), false );
+
+    bool code= true;
     try
     {
-        if(this_user::uid() == root_uid)
-        {
-            credentials c(context.get(pam::item::user));
-            this_user::morph_into(c.uid(), false);
-            morphed= true;
-        }
-
-        _M_show= true;
+        do_respond= true;
         context.change_pass();
 
         emit info("Password changed");
-        emit reset();
     }
     catch(pam::pass_error& e)
     {
         response(e.what());
-        emit reset_pass();
+        code= false;
     }
-    if(morphed) this_user::morph_into(root_uid, false);
+
+    this_user::morph_into(orig_uid, false);
+    return code;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -252,10 +277,8 @@ try
 {
     emit info("Rebooting");
     if(this_process::execute(config.reboot).code() == 0)
-    {
-        _M_login= false;
-        QApplication::quit();
-    }
+        QApplication::exit(code_cancel);
+    else emit error("Reboot command failed");
 }
 catch(execute_error& e)
 {
@@ -269,10 +292,8 @@ try
 {
     emit info("Powering off");
     if(this_process::execute(config.poweroff).code() == 0)
-    {
-        _M_login= false;
-        QApplication::quit();
-    }
+        QApplication::exit(code_cancel);
+    else emit error("Poweroff command failed");
 }
 catch(execute_error& e)
 {

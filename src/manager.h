@@ -9,6 +9,7 @@
 #include "pam/pam.h"
 
 #include <QObject>
+#include <QVariant>
 #include <QString>
 
 using namespace app;
@@ -21,16 +22,19 @@ public:
     explicit Manager(const QString& name, const QString& path, QObject* parent= nullptr);
     int run();
 
-signals:
-    void reset();
-    void reset_pass();
+    static constexpr int code_enter=0;
+    static constexpr int code_cancel=1;
 
-    void info(const QVariant& text);
-    void error(const QVariant& text);
+signals:
+    void info(const QVariant& message);
+    void error(const QVariant& message);
+
+    void enter_user_pass(const QVariant& message= QVariant());
+    void enter_pass(const QVariant& message= QVariant());
 
 private slots:
-    void login();
-    void change_pass();
+    void enter();
+    void cancel();
     void reboot();
     void poweroff();
 
@@ -43,15 +47,14 @@ private:
 
     void render();
 
-    bool username(const std::string& message, std::string& value);
-    bool password(const std::string& message, std::string& value);
-
-    bool _M_show;
+    bool do_respond= false;
     bool response(const std::string& message);
 
-    bool _M_login;
+    bool password(const std::string& message, std::string& value);
+    bool authenticate();
 
-    int startup(const QString& sess);
+    bool change_password();
+    int startup(const QString& session);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

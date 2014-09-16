@@ -191,20 +191,20 @@ int Manager::startup(const QString& sess)
     credentials c(context.get(pam::item::user));
     app::environ e;
 
-    std::string auth= c.home+ "/.Xauthority";
+    std::string auth= c.home()+ "/.Xauthority";
 
     bool found;
     std::string value;
 
-    e.set("USER", c.username);
-    e.set("LOGNAME", c.username);
-    e.set("HOME", c.home);
+    e.set("USER", c.username());
+    e.set("LOGNAME", c.username());
+    e.set("HOME", c.home());
 
     value= this_environ::get("PATH", &found);
     if(found) e.set("PATH", value);
 
-    e.set("PWD", c.home);
-    e.set("SHELL", c.shell);
+    e.set("PWD", c.home());
+    e.set("SHELL", c.shell());
 
     value= this_environ::get("TERM", &found);
     if(found) e.set("TERM", value);
@@ -225,10 +225,10 @@ void Manager::change_pass()
     bool morphed= false;
     try
     {
-        if(getuid()==0)
+        if(this_user::uid() == root_uid)
         {
-            credentials user(context.get(pam::item::user));
-            if(setresuid(user.uid, -1, -1)) throw errno_error();
+            credentials c(context.get(pam::item::user));
+            this_user::morph_into(c.uid(), false);
             morphed= true;
         }
 
@@ -243,7 +243,7 @@ void Manager::change_pass()
         response(e.what());
         emit reset_pass();
     }
-    if(morphed) if(setresuid(0, -1, -1)) throw errno_error();
+    if(morphed) this_user::morph_into(root_uid, false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

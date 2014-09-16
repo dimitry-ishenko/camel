@@ -166,46 +166,44 @@ bool Manager::response(const std::string& message)
 bool Manager::authenticate()
 try
 {
-    try
-    {
-        context.set(pam::item::user, settings.username().toStdString());
-        do_respond= true;
-        context.authenticate();
+    context.set(pam::item::user, settings.username().toStdString());
+    do_respond= true;
+    context.authenticate();
 
-        return true;
-    }
-    catch(pam::account_error& e)
+    return true;
+}
+catch(pam::account_error& e)
+{
+    if(e.code() == pam::errc::new_authtok_reqd)
     {
-        if(e.code() == pam::errc::new_authtok_reqd)
+        QString password= settings.password();
+
+        while(true)
         {
-            QString password= settings.password();
+            QTimer::singleShot(3000, this, SLOT(enter()));
+            QApplication::exec();
 
-            while(true)
+            emit enter_pass("Enter new password");
+            if(QApplication::exec() == code_cancel) break;
+
+            QString password_n= settings.password();
+
+            emit enter_pass("Retype new password");
+            if(QApplication::exec() == code_cancel) break;
+
+            if(settings.password() == password_n)
             {
-                QTimer::singleShot(3000, this, SLOT(enter()));
-                QApplication::exec();
+                settings.setPassword(password);
+                settings.setPassword_n(password_n);
 
-                emit enter_pass("Enter new password");
-                if(QApplication::exec() == code_cancel) break;
-
-                QString password_n= settings.password();
-
-                emit enter_pass("Retype new password");
-                if(QApplication::exec() == code_cancel) break;
-
-                if(settings.password() == password_n)
-                {
-                    settings.setPassword(password);
-                    settings.setPassword_n(password_n);
-
-                    if(change_password()) break;
-                }
-                else emit error("Passwords don't match");
+                if(change_password()) break;
             }
-            return false;
+            else emit error("Passwords don't match");
         }
-        else throw;
     }
+    else response(e.what());
+
+    return false;
 }
 catch(pam::pamh_error& e)
 {

@@ -1,88 +1,74 @@
 import QtQuick 1.1
 
-Rectangle {
+Rectangle
+{
     ////////////////////////////////////////
-    signal login()
-    signal change_pass()
+    signal enter()
+    signal cancel()
+
     signal reboot()
     signal poweroff()
 
     ////////////////////////////////////////
-    function reset() {
-        username.enabled = true
-        username.text = ""
-        password.text = ""
-        settings.username = ""
-        username.focus = true
+    function info(text)
+    {
+        info_text.color = "#555555"
+        info_text.text = text
+        info_anim.restart()
     }
 
-    function reset_pass() {
-        username.enabled = false
-        password.text = ""
-        password.focus = true
-        settings.password_n = ""
-        enter_animation.start()
-    }
-
-    SequentialAnimation {
-        id: enter_animation
-        PauseAnimation { duration: 2000 }
-        ScriptAction { script: info("Enter new password") }
+    function error(text)
+    {
+        info_text.color = "#ff0000"
+        info_text.text = text
+        info_anim.restart()
     }
 
     ////////////////////////////////////////
-    function info(text) { message(text, "#555555") }
-    function error(text) { message(text, "#ff0000") }
+    function enter_user_pass(text)
+    {
+        user_input.text = ""
+        user_input.enabled = true
+        user_input.focus = true
 
-    function message(text, color) {
-        message_animation.stop()
-        message_label.text = text
-        message_label.color = color
-        message_label.opacity = 1
-        message_animation.start()
+        pass_input.text = ""
+        pass_input.enabled = true
+
+        login_img.enabled = true
+
+        if(text) info(text)
+    }
+
+    function enter_pass(text)
+    {
+        user_input.enabled = false
+
+        pass_input.text = ""
+        pass_input.enabled = true
+        pass_input.focus = true
+
+        login_img.enabled = true
+
+        if(text) info(text)
     }
 
     ////////////////////////////////////////
-    SequentialAnimation {
-        id: message_animation
-        PauseAnimation { duration: 4000 }
-        PropertyAnimation {
-            target: message_label
-            property: "opacity"
-            from: 1; to: 0; duration: 300
-            easing.type: Easing.InQuad
-        }
-    }
-
-    ////////////////////////////////////////
-    Connections {
+    Connections
+    {
         target: settings
         onSessionChanged: info(settings.session)
     }
 
-    Keys.onEscapePressed: reset()
-
-    ////////////////////////////////////////
-    function process() {
-        if(settings.username === "") {
-            settings.username = username.text
-            settings.password = password.text
-            login()
-        }
-        else if(settings.password_n === "") {
-            settings.password_n = password.text
-            password.text = ""
-            info("Retype new password")
-        }
-        else if(password.text !== settings.password_n) {
-            error("Passwords don't match")
-            reset_pass()
-        }
-        else change_pass()
+    onEnter:
+    {
+        user_input.enabled = false
+        pass_input.enabled = false
+        login_img.enabled = false
     }
 
     ////////////////////////////////////////
-    Image {
+    Image
+    {
         id: background
         source: "background.png"
         anchors.fill: parent
@@ -91,27 +77,24 @@ Rectangle {
         clip: true
 
         ////////////////////////////////////////
-        Image {
+        Image
+        {
             id: panel
             source: "rectangle.png"
-            width: 416
-            height: 262
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
 
-            Image {
-                id: panel_overlay
+            Image
+            {
                 source: "rectangle_overlay.png"
-                opacity: 0.1
-                width: 416
-                height: 262
                 anchors.fill: parent
+                opacity: 0.1
             }
 
             ////////////////////////////////////////
-            Text {
-                id: hostname
-                objectName: "hostname"
+            Text
+            {
+                id: name_text
                 height: 24
                 anchors { left: parent.left; leftMargin: 20 }
                 anchors { right: parent.right; rightMargin: 20 }
@@ -120,18 +103,32 @@ Rectangle {
                 font { family: "Sans"; pointSize: 14; bold: true }
                 color: "#0b678c"
                 opacity: 0.75
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
                 clip: true
             }
 
             ////////////////////////////////////////
-            Text {
-                id: message_label
+            SequentialAnimation
+            {
+                id: info_anim
+                PropertyAction { target: info_text; property: "opacity"; value: 1 }
+                PauseAnimation { duration: 3000; }
+                PropertyAnimation
+                {
+                    target: info_text
+                    property: "opacity"
+                    to: 0
+                    duration: 300
+                }
+            }
+
+            ////////////////////////////////////////
+            Text
+            {
+                id: info_text
                 height: 40
                 anchors { left: parent.left; leftMargin: 20 }
                 anchors { right: parent.right; rightMargin: 20 }
-                anchors.top: password_area.bottom
+                anchors { top: pass_item.bottom }
                 font { family: "Sans"; pointSize: 10; bold: true }
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -140,81 +137,93 @@ Rectangle {
             }
 
             ////////////////////////////////////////
-            Item {
-                id: username_area
-                width: 200
-                height: 50
-                anchors.horizontalCenter: parent.horizontalCenter;
+            Item
+            {
+                id: user_item
+                width: 200; height: 50
+                anchors { horizontalCenter: parent.horizontalCenter; }
                 anchors { verticalCenter: parent.verticalCenter; verticalCenterOffset: -25 }
 
-                Image {
-                    id: username_icon
+                Image
+                {
                     source: "user_icon.png"
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                Image {
-                    id: username_panel
-                    source: username_mouse.containsMouse? "lineedit_active.png": "lineedit_normal.png"
+                Image
+                {
+                    source: user_m.containsMouse? "lineedit_active.png": "lineedit_normal.png"
                     anchors { left: parent.left; leftMargin: 42 }
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors { verticalCenter: parent.verticalCenter }
 
-                    MouseArea {
-                        id: username_mouse
+                    MouseArea
+                    {
+                        id: user_m
                         anchors.fill: parent
                         hoverEnabled: true
                     }
                 }
 
-                TextInput {
-                    id: username
-                    objectName: "username"
-                    width: 140
-                    height: 20
+                TextInput
+                {
+                    id: user_input
+                    width: 140; height: 20
                     anchors { left: parent.left; leftMargin: 49 }
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors { verticalCenter: parent.verticalCenter }
                     font { family: "Sans"; pointSize: 12 }
                     color: "#0b678c"
 
-                    Keys.onTabPressed: password.focus = true
-                    Keys.onReturnPressed: password.focus = true
+                    Keys.onPressed:
+                        if(event.key == Qt.Key_Return || event.key == Qt.Key_Tab)
+                        {
+                            settings.username = user_input.text
+                            pass_input.focus = true
+                            event.accepted = true
+                        }
+                        else if(event.key === Qt.Key_Escape)
+                        {
+                            cancel()
+                            event.accepted = true
+                        }
                 }
             }
 
             ////////////////////////////////////////
-            Item {
-                id: password_area
-                height: username_area.height
-                anchors.left: username_area.left
-                anchors.right: username_area.right
-                anchors.top: username_area.bottom
+            Item
+            {
+                id: pass_item
+                height: user_item.height
+                anchors.left: user_item.left
+                anchors.right: user_item.right
+                anchors.top: user_item.bottom
 
-                Image {
-                    id: password_icon
+                Image
+                {
                     source: "lock.png"
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                Image {
-                    id: password_panel
-                    source: password_mouse.containsMouse? "lineedit_active.png": "lineedit_normal.png"
+                Image
+                {
+                    source: pass_m.containsMouse? "lineedit_active.png": "lineedit_normal.png"
                     anchors { left: parent.left; leftMargin: 42 }
                     anchors.verticalCenter: parent.verticalCenter
 
-                    MouseArea {
-                        id: password_mouse
+                    MouseArea
+                    {
+                        id: pass_m
                         anchors.fill: parent
                         hoverEnabled: true
                     }
                 }
 
-                TextInput {
-                    id: password
-                    objectName: "password"
-                    width: 140
-                    height: 20
+                TextInput
+                {
+                    id: pass_input
+                    width: user_input.width
+                    height: user_input.height
                     anchors { left: parent.left; leftMargin: 49 }
                     anchors.verticalCenter: parent.verticalCenter
                     font { family: "Sans"; pointSize: 12 }
@@ -222,104 +231,139 @@ Rectangle {
                     echoMode: TextInput.Password
                     passwordCharacter: "*"
 
-                    Keys.onTabPressed: username.focus = true
-                    Keys.onReturnPressed: process()
+                    Keys.onPressed:
+                        if(event.key == Qt.Key_Return)
+                        {
+                            settings.password = pass_input.text
+                            enter()
+                            event.accepted = true
+                        }
+                        else if(event.key == Qt.Key_Tab)
+                        {
+                            user_input.focus = true
+                            event.accepted = true
+                        }
+                        else if(event.key == Qt.Key_Escape)
+                        {
+                            cancel()
+                            event.accepted = true
+                        }
                 }
             }
 
             ////////////////////////////////////////
-            Image {
-                id: session_button
+            Image
+            {
                 source: "session_normal.png"
-                opacity: 0.9
                 anchors { left: parent.left; leftMargin: 22 }
                 anchors { bottom: parent.bottom; bottomMargin: 20 }
+                opacity: 0.9
 
-                MouseArea {
-                    id: session_mouse
+                MouseArea
+                {
+                    id: session_m
                     anchors.fill: parent
 
                     onClicked: settings.nextSession()
                 }
             }
 
-            Image {
-                id: system_button
+            Image
+            {
                 source: "system_normal.png"
-                opacity: 0.9
                 anchors { left: parent.left; leftMargin: 50 }
                 anchors { bottom: parent.bottom; bottomMargin: 20 }
+                opacity: 0.9
 
-                MouseArea {
+                MouseArea
+                {
                     anchors.fill: parent
-                    onClicked: system_menu.visible = !system_menu.visible
+                    onClicked: system_img.visible = !system_img.visible
                 }
 
-                Image {
-                    id: system_menu
+                Image
+                {
+                    id: system_img
                     source: "sessions.png"
-                    anchors.left: system_button.left
-                    anchors.top: system_button.bottom
+                    anchors.left: parent.left
+                    anchors.top: parent.bottom
                     visible: false
 
-                    Text {
-                        id: reboot_item
-                        anchors.left: parent.left
-                        anchors.right: parent.right
+                    Text
+                    {
+                        id: reboot_text
+                        anchors { left: parent.left }
+                        anchors { right: parent.right }
                         anchors { top: parent.top; topMargin: 5 }
-                        anchors.bottom: parent.verticalCenter
-
-                        text: "Reboot"
-                        color: reboot_mouse.containsMouse? "#ffffff": "#000000"
+                        anchors { bottom: parent.verticalCenter }
+                        color: reboot_m.containsMouse? "#ffffff": "#000000"
                         font { family: "Sans"; pointSize: 10 }
+                        text: "Reboot"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
 
-                        MouseArea {
-                            id: reboot_mouse
+                        MouseArea
+                        {
+                            id: reboot_m
                             anchors.fill: parent
                             hoverEnabled: true
 
-                            onClicked: reboot()
+                            onClicked:
+                            {
+                                system_img.visible = false
+                                reboot()
+                            }
                         }
                     }
 
-                    Text {
-                        id: poweroff_item
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: reboot_item.bottom
+                    Text
+                    {
+                        id: poweroff_text
+                        anchors { left: parent.left }
+                        anchors { right: parent.right }
+                        anchors { top: reboot_text.bottom }
                         anchors { bottom: parent.bottom; bottomMargin: 5 }
-
-                        text: "Shutdown"
-                        color: poweroff_mouse.containsMouse? "#ffffff": "#000000"
+                        color: poweroff_m.containsMouse? "#ffffff": "#000000"
                         font { family: "Sans"; pointSize: 10 }
+                        text: "Power off"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
 
-                        MouseArea {
-                            id: poweroff_mouse
+                        MouseArea
+                        {
+                            id: poweroff_m
                             anchors.fill: parent
                             hoverEnabled: true
 
-                            onClicked: poweroff()
+                            onClicked:
+                            {
+                                system_img.visible = false
+                                poweroff()
+                            }
                         }
                     }
                 }
             }
 
-            Image {
-                id: login_button
-                source: login_mouse.containsMouse? "login_active.png": "login_normal.png"
+            Image
+            {
+                id: login_img
+                source: login_m.containsMouse? "login_active.png": "login_normal.png"
                 anchors { right: parent.right; rightMargin: 20 }
-                anchors.verticalCenter: parent.verticalCenter
+                anchors { verticalCenter: parent.verticalCenter }
 
-                MouseArea {
-                    id: login_mouse
+                MouseArea
+                {
+                    id: login_m
                     anchors.fill: parent
                     hoverEnabled: true
 
-                    onClicked: process()
+                    onClicked:
+                    {
+                        settings.username = user_input.text
+                        settings.password = pass_input.text
+                        enter()
+                    }
                 }
             }
         }

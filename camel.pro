@@ -144,14 +144,10 @@ OTHER_FILES += \
 
 ########################################
 OTHER_FILES += \
-    theme/redmond/username_active.png \
-    theme/redmond/username.png      \
     theme/redmond/tile.png          \
     theme/redmond/system_menu.png   \
     theme/redmond/session_active.png\
     theme/redmond/session.png       \
-    theme/redmond/power_active.png  \
-    theme/redmond/power.png         \
     theme/redmond/password_active.png \
     theme/redmond/password.png      \
     theme/redmond/menu_item_active.png \

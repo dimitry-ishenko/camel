@@ -34,6 +34,8 @@ Rectangle
         pass_input.text = ""
         pass_input.enabled = true
 
+        login_img.enabled = true
+
         if(text) info(text)
     }
 
@@ -44,6 +46,8 @@ Rectangle
         pass_input.text = ""
         pass_input.enabled = true
         pass_input.focus = true
+
+        login_img.enabled = true
 
         if(text) info(text)
     }
@@ -59,6 +63,7 @@ Rectangle
     {
         user_input.enabled = false
         pass_input.enabled = false
+        login_img.enabled = false
     }
 
     ////////////////////////////////////////

@@ -109,7 +109,7 @@ Rectangle
                 id: user_input
                 anchors { fill: parent }
                 anchors { leftMargin: 8; rightMargin: 8; topMargin: 5; bottomMargin: 5 }
-                font { family: "Sans"; pixelSize: 13 }
+                font { family: "Sans"; pointSize: 10 }
 
                 Keys.onPressed:
                     if(event.key == Qt.Key_Return || event.key == Qt.Key_Tab)
@@ -228,7 +228,7 @@ Rectangle
             width: 300; height: 40
             anchors { horizontalCenter: pass_rect.horizontalCenter }
             anchors { top: pass_rect.bottom; topMargin: 10 }
-            font { family: "Sans"; pixelSize: 12 }
+            font { family: "Sans"; pointSize: 10 }
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.WordWrap
@@ -288,9 +288,10 @@ Rectangle
 
                 Text
                 {
+                    id: reboot_text
                     anchors { fill: reboot_img }
                     anchors { leftMargin: 35; rightMargin: 10; topMargin: 3; bottomMargin: 3 }
-                    font { family: "Sans"; pixelSize: 12 }
+                    font { family: "Sans"; pointSize: 9 }
                     text: "Reboot"
                 }
                 Image
@@ -316,9 +317,13 @@ Rectangle
 
                 Text
                 {
-                    anchors { fill: poweroff_img }
-                    anchors { leftMargin: 35; rightMargin: 10; topMargin: 3; bottomMargin: 3 }
-                    font { family: "Sans"; pixelSize: 12 }
+                    id: poweroff_text
+                    anchors.fill: poweroff_img
+                    anchors.leftMargin: reboot_text.anchors.leftMargin
+                    anchors.rightMargin: reboot_text.anchors.rightMargin
+                    anchors.topMargin: reboot_text.anchors.topMargin
+                    anchors.bottomMargin: reboot_text.anchors.bottomMargin
+                    font: reboot_text.font
                     text: "Power off"
                 }
                 Image {

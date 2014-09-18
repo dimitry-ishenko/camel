@@ -16,9 +16,7 @@
 
 #include <X11/Xlib.h>
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-namespace app
-{
+using namespace app;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 namespace x11
@@ -55,16 +53,16 @@ const std::string xorg_path= "/usr/bin/X";
 const std::string xauth_path= "/usr/bin/xauth";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-server::server(const std::string& name, const std::string& server_auth, const arguments& args):
+server::server(const std::string& name, const std::string& server_auth, const app::arguments& args):
     _M_name(name)
 {
     set_cookie(server_auth);
     this_environ::set("XAUTHORITY", server_auth);
 
     arguments xorg_args;
-    xorg_args.push_back(name);
-    xorg_args.push_back(args);
-    xorg_args.push_back({ "-auth", server_auth });
+    xorg_args.insert(name);
+    xorg_args.insert(args);
+    xorg_args.insert({ "-auth", server_auth });
 
     _M_process= process(process::group, this_process::replace, xorg_path, xorg_args);
 
@@ -107,9 +105,6 @@ void server::set_cookie(const std::string& path)
     xauth.join();
 
     if(xauth.exit_code().code()) throw std::runtime_error("Could not set server auth");
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

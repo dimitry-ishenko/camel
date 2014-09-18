@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "manager.h"
-#include "credentials.h"
+#include "credentials/credentials.h"
 #include "pam/pam_error.h"
-#include "environ.h"
-#include "log.h"
+#include "process/environ.h"
+#include "logger/logger.h"
 #include "errno_error.h"
 
 #include <QApplication>

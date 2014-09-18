@@ -53,14 +53,13 @@ INSTALLS += theme
 
 ########################################
 SOURCES += \
-    lib/log.cpp                     \
-    lib/utility.cpp                 \
+    lib/logger/logger.cpp           \
     lib/pam/pam.cpp                 \
-    lib/environ.cpp                 \
-    lib/arguments.cpp               \
+    lib/process/environ.cpp         \
+    lib/process/arguments.cpp       \
     lib/process/process.cpp         \
     lib/x11/server.cpp              \
-    lib/credentials.cpp             \
+    lib/credentials/credentials.cpp \
     src/config.cpp                  \
     src/settings.cpp                \
     src/manager.cpp                 \
@@ -68,19 +67,19 @@ SOURCES += \
 
 HEADERS += \
     lib/errno_error.h               \
-    lib/log.h                       \
+    lib/logger/logger.h             \
     lib/utility.h                   \
-    lib/wrapper.h                   \
+    lib/container.h                 \
     lib/pam/pam.h                   \
     lib/pam/pam_error.h             \
     lib/pam/pam_type.h              \
     lib/basic_filebuf.h             \
     lib/flags.h                     \
-    lib/environ.h                   \
-    lib/arguments.h                 \
+    lib/process/environ.h           \
+    lib/process/arguments.h         \
     lib/process/process.h           \
     lib/x11/server.h                \
-    lib/credentials.h               \
+    lib/credentials/credentials.h   \
     src/config.h                    \
     src/settings.h                  \
     src/manager.h                   \

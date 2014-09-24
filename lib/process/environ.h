@@ -33,15 +33,27 @@ public:
     typedef typename container_type::mapped_type value_type;
 
 public:
+    environ() = default;
+    environ(const environ&) = default;
+    environ(environ&&) = default;
+
+    environ& operator=(const environ&) = default;
+    environ& operator=(environ&&) = default;
+
+    ////////////////////
     value_type& get(const name_type& name) { return _M_c.at(name); }
     const value_type& get(const name_type& name) const { return _M_c.at(name); }
 
-    void set(const name_type& name, const value_type& value) { _M_c[name]= value; }
-    void set(name_type&& name, value_type&& value) { _M_c[std::move(name)]= std::move(value); }
-    void set(const name_type& name, value_type&& value) { _M_c[name]= std::move(value); }
-    void set(name_type&& name, const value_type& value) { _M_c[std::move(name)]= value; }
+    ////////////////////
+    template<typename NameType, typename ValueType>
+    void insert(NameType&& name, ValueType&& value)
+    {
+        insert(std::make_pair(std::forward<NameType>(name), std::forward<ValueType>(value)));
+    }
+    using container::insert;
 
-    void reset(const name_type& name) { _M_c.erase(name); }
+    using container::erase;
+    void erase(const name_type& name) { _M_c.erase(name); }
 
     ////////////////////
     size_type count(const name_type& name) const { return _M_c.count(name); }
@@ -120,8 +132,8 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 value_type get(const name_type& name, bool* found= nullptr) noexcept;
-void set(const name_type& name, const value_type& value, bool over= true);
-void reset(const std::string& name);
+void insert(const name_type& name, const value_type& value, bool over= true);
+void erase(const std::string& name);
 
 ////////////////////
 inline iterator begin() noexcept { return iterator(::environ); }

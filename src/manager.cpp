@@ -51,8 +51,8 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
     context.set_pass_func(std::bind(&Manager::password, this, std::placeholders::_1, std::placeholders::_2));
     context.set_error_func(std::bind(&Manager::response, this, std::placeholders::_1));
 
-    context.set(pam::item::ruser, "root");
-    context.set(pam::item::tty, server.name());
+    context.insert(pam::item::ruser, "root");
+    context.insert(pam::item::tty, server.name());
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ bool Manager::response(const std::string& message)
 bool Manager::authenticate()
 try
 {
-    context.set(pam::item::user, settings.username().toStdString());
+    context.insert(pam::item::user, settings.username().toStdString());
     do_respond= true;
     context.authenticate();
 
@@ -222,21 +222,21 @@ int Manager::startup(const QString& session)
     std::string x;
     bool found;
 
-    e.set("USER", c.username());
-    e.set("LOGNAME", c.username());
-    e.set("HOME", c.home());
+    e.insert("USER", c.username());
+    e.insert("LOGNAME", c.username());
+    e.insert("HOME", c.home());
 
     x= this_environ::get("PATH", &found);
-    if(found) e.set("PATH", x);
+    if(found) e.insert("PATH", x);
 
-    e.set("PWD", c.home());
-    e.set("SHELL", c.shell());
+    e.insert("PWD", c.home());
+    e.insert("SHELL", c.shell());
 
     x= this_environ::get("TERM", &found);
-    if(found) e.set("TERM", x);
+    if(found) e.insert("TERM", x);
 
-    e.set("DISPLAY", context.get(pam::item::tty));
-    e.set("XAUTHORITY", auth);
+    e.insert("DISPLAY", context.get(pam::item::tty));
+    e.insert("XAUTHORITY", auth);
 
     c.morph_into();
     server.set_cookie(auth);

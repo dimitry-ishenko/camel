@@ -30,12 +30,12 @@ process::~process()
     if(running())
     {
         terminate();
-        if(!wait_for(std::chrono::seconds(3))) kill();
+        if(!can_join(std::chrono::seconds(3))) kill();
     }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-static inline void discard(int fd)
+static inline void discard(int fd) noexcept
 {
     if(fd != -1)
     {
@@ -44,7 +44,7 @@ static inline void discard(int fd)
     }
 }
 
-static inline void discard(int fd[2])
+static inline void discard(int fd[2]) noexcept
 {
     discard(fd[0]);
     discard(fd[1]);
@@ -86,32 +86,32 @@ static void open_if(bool cond,
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void process::_M_process(std::function<int()> func, bool group, redir_flags flags)
+void process::_M_process(std::function<int()> func, bool group, app::redir redir)
 {
     int out_fd[2]= {-1, -1}, in_fd[2]= {-1, -1}, err_fd[2]= {-1, -1};
 
     try
     {
-        pipe_if(flags & redir::cout, out_fd);
-        pipe_if(flags & redir::cin, in_fd);
-        pipe_if(flags & redir::cerr, err_fd);
+        pipe_if(redir && redir::cout, out_fd);
+        pipe_if(redir && redir::cin, in_fd);
+        pipe_if(redir && redir::cerr, err_fd);
 
         _M_id= fork();
         if(_M_id == -1) throw errno_error();
 
         if(_M_id == 0)
         {
-            dup_if(flags & redir::cout, STDOUT_FILENO, out_fd, 1);
-            dup_if(flags & redir::cin, STDIN_FILENO, in_fd, 0);
-            dup_if(flags & redir::cerr, STDERR_FILENO, err_fd, 1);
+            dup_if(redir && redir::cout, STDOUT_FILENO, out_fd, 1);
+            dup_if(redir && redir::cin, STDIN_FILENO, in_fd, 0);
+            dup_if(redir && redir::cerr, STDERR_FILENO, err_fd, 1);
 
             int code= func();
             exit(code);
         }
 
-        open_if(flags & redir::cout, cout, _M_cout, std::ios_base::in, out_fd, 0);
-        open_if(flags & redir::cin, cin, _M_cin, std::ios_base::out, in_fd, 1);
-        open_if(flags & redir::cerr, cerr, _M_cerr, std::ios_base::in, err_fd, 0);
+        open_if(redir && redir::cout, cout, _M_cout, std::ios_base::in, out_fd, 0);
+        open_if(redir && redir::cin, cin, _M_cin, std::ios_base::out, in_fd, 1);
+        open_if(redir && redir::cerr, cerr, _M_cerr, std::ios_base::in, err_fd, 0);
 
         if(group)
         {
@@ -184,7 +184,7 @@ static void handler(int)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-bool process::wait_for(std::chrono::seconds s, std::chrono::nanoseconds ns)
+bool process::can_join(std::chrono::seconds s, std::chrono::nanoseconds n)
 {
     if(running())
     {
@@ -195,14 +195,10 @@ bool process::wait_for(std::chrono::seconds s, std::chrono::nanoseconds ns)
 
         if(sigaction(int(app::signal::child), &sa_new, &sa_old)) throw errno_error();
 
-        struct timespec x=
-        {
-            static_cast<std::time_t>(s.count()),
-            static_cast<long>(ns.count())
-        };
+        timespec time= { static_cast<std::time_t>(s.count()), static_cast<long>(n.count()) };
 
         bool value= false;
-        while(nanosleep(&x, &x) == -1)
+        while(nanosleep(&time, &time) == -1)
         {
             if(std::errc(errno) == std::errc::interrupted)
             {
@@ -293,15 +289,11 @@ exit_code execute(const std::string& command)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void internal::sleep_for(std::chrono::seconds s, std::chrono::nanoseconds ns)
+void internal::sleep_for(std::chrono::seconds s, std::chrono::nanoseconds n)
 {
-    struct timespec x=
-    {
-        static_cast<std::time_t>(s.count()),
-        static_cast<long>(ns.count())
-    };
+    timespec time= { static_cast<std::time_t>(s.count()), static_cast<long>(n.count()) };
 
-    nanosleep(&x, nullptr);
+    nanosleep(&time, nullptr);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -103,9 +103,13 @@ void context::set_conv()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-context::~context()
+void context::close() noexcept
 {
-    if(_M_pamh) pam_end(_M_pamh, _M_code);
+    if(_M_pamh)
+    {
+        pam_end(_M_pamh, _M_code);
+        _M_pamh= nullptr;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +127,7 @@ std::string context::get(pam::item item, bool* found)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void context::set(pam::item item, const std::string& value)
+void context::insert(pam::item item, const std::string& value)
 {
     if(item == pam::item::conv || item == pam::item::fail_delay) throw item_error(_M_pamh, errc::bad_item);
 
@@ -132,7 +136,7 @@ void context::set(pam::item item, const std::string& value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void context::reset(pam::item item)
+void context::erase(pam::item item)
 {
     if(item == pam::item::conv || item == pam::item::fail_delay) throw item_error(_M_pamh, errc::bad_item);
 
@@ -151,21 +155,21 @@ std::string context::get(const std::string& name, bool* found)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void context::set(const std::string& name, const std::string& value)
+void context::insert(const std::string& name, const std::string& value)
 {
     _M_code= pam_putenv(_M_pamh, (name+ "="+ value).data());
     if(errc(_M_code) != errc::success) throw env_error(_M_pamh, _M_code);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void context::reset(const std::string& name)
+void context::erase(const std::string& name)
 {
     _M_code= pam_putenv(_M_pamh, name.data());
     if(errc(_M_code) != errc::success) throw env_error(_M_pamh, _M_code);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-app::environ context::environ()
+app::environ context::environ() const
 {
     return app::environ::from_charpp(pam_getenvlist(_M_pamh), true);
 }

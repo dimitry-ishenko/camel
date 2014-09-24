@@ -42,14 +42,15 @@ public:
 
 public:
     server() = default;
-    server(server&) = delete;
     server(const server&) = delete;
 
     server(server&& x) noexcept { swap(x); }
 
     server(const std::string& name, const std::string& server_auth, const app::arguments& args= {});
     explicit server(const std::string& server_auth, const app::arguments& args= {}): server(default_name, server_auth, args) { }
-    ~server();
+    ~server() { close(); }
+
+    void close();
 
     server& operator=(const server&) = delete;
     server& operator=(server&& x) noexcept
@@ -68,11 +69,11 @@ public:
     }
 
     ////////////////////
-    const std::string& name() const { return _M_name; }
+    const std::string& name() const noexcept { return _M_name; }
 
     bool running() { return _M_process.running(); }
 
-    x11::display display() const { return _M_display; }
+    x11::display display() const noexcept { return _M_display; }
 
     void set_cookie(const std::string& path);
 

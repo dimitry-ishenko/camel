@@ -74,7 +74,7 @@ HEADERS += \
     lib/pam/pam_error.h             \
     lib/pam/pam_type.h              \
     lib/basic_filebuf.h             \
-    lib/flags.h                     \
+    lib/enum.h                      \
     lib/process/environ.h           \
     lib/process/arguments.h         \
     lib/process/process.h           \

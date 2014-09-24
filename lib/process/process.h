@@ -13,7 +13,7 @@
 #include "environ.h"
 #include "arguments.h"
 #include "basic_filebuf.h"
-#include "flags.h"
+#include "enum.h"
 
 #include <fstream>
 #include <functional>
@@ -59,8 +59,8 @@ struct exit_code
     static constexpr int none= -1;
 
     exit_code() noexcept = default;
-    exit_code(int code): _M_code(code) { }
-    exit_code(app::signal term): _M_term(term) { }
+    exit_code(int code) noexcept: _M_code(code) { }
+    exit_code(app::signal term) noexcept: _M_term(term) { }
 
     int code() const noexcept { return _M_code; }
     signal term() const noexcept { return _M_term; }
@@ -83,7 +83,7 @@ enum class redir
     cerr=4,
     all= cout | cin | cerr
 };
-DECLARE_FLAGS(redir)
+ENUM_OPERATOR(redir)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class process
@@ -96,22 +96,14 @@ public:
 
 public:
     process() = default;
-    process(process&) = delete;
     process(const process&) = delete;
-
     process(process&& x) noexcept { swap(x); }
 
     ////////////////////
     template<typename Callable, typename... Args>
-    process(group_t, redir_flags flags, Callable&& func, Args&&... args)
+    process(group_t, app::redir redir, Callable&& func, Args&&... args)
     {
-        _M_process(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...), true, flags);
-    }
-
-    template<typename Callable, typename... Args>
-    process(group_t, redir flags, Callable&& func, Args&&... args)
-    {
-        _M_process(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...), true, flags);
+        _M_process(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...), true, redir);
     }
 
     ////////////////////
@@ -123,15 +115,9 @@ public:
 
     ////////////////////
     template<typename Callable, typename... Args>
-    process(redir_flags flags, Callable&& func, Args&&... args)
+    process(app::redir redir, Callable&& func, Args&&... args)
     {
-        _M_process(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...), false, flags);
-    }
-
-    template<typename Callable, typename... Args>
-    process(redir flags, Callable&& func, Args&&... args)
-    {
-        _M_process(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...), false, flags);
+        _M_process(std::bind(std::forward<Callable>(func), std::forward<Args>(args)...), false, redir);
     }
 
     ////////////////////
@@ -179,12 +165,12 @@ public:
     void detach() noexcept { _M_active= false; }
 
     template<typename Rep, typename Period>
-    bool wait_for(const std::chrono::duration<Rep, Period>& t)
+    bool can_join(const std::chrono::duration<Rep, Period>& x)
     {
-        std::chrono::seconds s= std::chrono::duration_cast<std::chrono::seconds>(t);
-        std::chrono::nanoseconds ns= std::chrono::duration_cast<std::chrono::nanoseconds>(t - s);
+        std::chrono::seconds s= std::chrono::duration_cast<std::chrono::seconds>(x);
+        std::chrono::nanoseconds n= std::chrono::duration_cast<std::chrono::nanoseconds>(x - s);
 
-        return wait_for(s, ns);
+        return can_join(s, n);
     }
     void join();
 
@@ -199,9 +185,9 @@ protected:
     app::exit_code _M_code;
     filebuf _M_cin, _M_cout, _M_cerr;
 
-    void _M_process(std::function<int()>, bool group, redir_flags flags);
+    void _M_process(std::function<int()>, bool group, app::redir);
 
-    bool wait_for(std::chrono::seconds, std::chrono::nanoseconds);
+    bool can_join(std::chrono::seconds, std::chrono::nanoseconds);
     void set_code(int code);
 };
 
@@ -231,12 +217,12 @@ exit_code execute(const std::string& command);
 namespace internal { void sleep_for(std::chrono::seconds, std::chrono::nanoseconds); }
 
 template<typename Rep, typename Period>
-inline void sleep_for(const std::chrono::duration<Rep, Period>& t)
+inline void sleep_for(const std::chrono::duration<Rep, Period>& x)
 {
-    std::chrono::seconds s= std::chrono::duration_cast<std::chrono::seconds>(t);
-    std::chrono::nanoseconds ns= std::chrono::duration_cast<std::chrono::nanoseconds>(t - s);
+    std::chrono::seconds s= std::chrono::duration_cast<std::chrono::seconds>(x);
+    std::chrono::nanoseconds n= std::chrono::duration_cast<std::chrono::nanoseconds>(x - s);
 
-    internal::sleep_for(s, ns);
+    internal::sleep_for(s, n);
 }
 
 template<typename Clock, typename Duration>

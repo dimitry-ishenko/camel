@@ -29,30 +29,37 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
 
     if(path.size()) config.path= path;
 
-    config.parse();
-
-    ////////////////////
-    settings.setHostname(QHostInfo::localHostName());
-
-    QDir dir(config.sessions_path);
-    if(dir.isReadable())
+    try
     {
-        QStringList sessions= dir.entryList(QDir::Files);
-        if(config.sessions.size())
-            sessions= sessions.toSet().intersect(config.sessions.toSet()).toList();
+        config.parse();
 
-        settings.setSessions(sessions);
+        ////////////////////
+        settings.setHostname(QHostInfo::localHostName());
+
+        QDir dir(config.sessions_path);
+        if(dir.isReadable())
+        {
+            QStringList sessions= dir.entryList(QDir::Files);
+            if(config.sessions.size())
+                sessions= sessions.toSet().intersect(config.sessions.toSet()).toList();
+
+            settings.setSessions(sessions);
+        }
+
+        ////////////////////
+        server= x11::server(config.xorg_name, config.xorg_auth, config.xorg_args);
+
+        context= pam::context(config.pam_service);
+        context.set_pass_func(std::bind(&Manager::password, this, std::placeholders::_1, std::placeholders::_2));
+        context.set_error_func(std::bind(&Manager::response, this, std::placeholders::_1));
+
+        context.insert(pam::item::ruser, "root");
+        context.insert(pam::item::tty, server.name());
     }
-
-    ////////////////////
-    server= x11::server(config.xorg_name, config.xorg_auth, config.xorg_args);
-
-    context= pam::context(config.pam_service);
-    context.set_pass_func(std::bind(&Manager::password, this, std::placeholders::_1, std::placeholders::_2));
-    context.set_error_func(std::bind(&Manager::response, this, std::placeholders::_1));
-
-    context.insert(pam::item::ruser, "root");
-    context.insert(pam::item::tty, server.name());
+    catch(...)
+    {
+        exception= std::current_exception();
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +76,8 @@ void Manager::cancel()
 int Manager::run()
 try
 {
+    if(exception) std::rethrow_exception(exception);
+
     {
         QApplication app(server.display());
         render();

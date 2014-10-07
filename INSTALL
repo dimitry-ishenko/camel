@@ -11,7 +11,6 @@ Installation instructions
 to determine, where the things get installed:
 
 <name>      <default value>
-DESTDIR     /
 prefix      /usr/local
 bindir      $(prefix)/bin
 sysconfdir  $(prefix)/etc

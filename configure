@@ -1,8 +1,21 @@
 #!/bin/bash
 
-if [[ "${1}" == "-h" || "${1}" == "--help" ]]; then
-    echo "This is not a real configure script."
-    exit 0
-fi
+args=()
 
-qmake "${@##--}"
+for arg in ${@}; do
+
+    if [[ "${arg}" == "-h" || "${arg}" == "--help" ]]; then
+        echo "This is not a real configure script."
+        exit 0
+    elif [[ "${arg}" == *=* ]]; then
+        arg=${arg#--}
+
+        echo "Adding argument ${arg}"
+        args+=("${arg}")
+    else
+        echo "Ignoring argument ${arg}"
+    fi
+done
+
+echo "Running qmake"
+qmake "${args}"

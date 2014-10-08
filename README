@@ -10,6 +10,14 @@ You may also be able to compile it using later versions of the GCC and
 the libstdc++ library. (I had trouble with gcc 4.7.3, as it does not fully
 support C++11.)
 
+UPDATE: Due to missing move semantics for streams in libstdc++, you will not
+be able to use gcc to compile this program (until at least gcc 5).
+
+See bug #53626: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53626
+
+(If anyone figures out recipe for (gcc) - (libstdc++) + (libc++) + (Qt),
+please feel free to drop me an email.)
+
 Camel additionally requires the following packages:
     X.Org X server
     Qt (including QtDeclarative)

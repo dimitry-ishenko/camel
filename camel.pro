@@ -104,6 +104,7 @@ OTHER_FILES += \
     INSTALL                         \
     NEWS                            \
     README                          \
+    configure                       \
 
 ########################################
 # themes

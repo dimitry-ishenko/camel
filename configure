@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [[ "${1}" == "-h" || "${1}" == "--help" ]]; then
+    echo "This is not a real configure script."
+    exit 0
+fi
+
+qmake "${@##--}"

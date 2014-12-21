@@ -9,7 +9,7 @@ INCLUDEPATH  = ./lib ./src
 LIBS         = -lc++ -lX11 -lpam
 
 QMAKE_CXX    = clang++
-QMAKE_CXXFLAGS = -std=c++11 -stdlib=libc++
+QMAKE_CXXFLAGS = -std=c++11 -stdlib=libc++ -Wno-deprecated-register
 
 ########################################
 count(prefix, 1) {

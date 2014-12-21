@@ -1,4 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2014 Dimitry Ishenko
+// Distributed under the GNU GPL v2. For full terms please visit:
+// http://www.gnu.org/licenses/gpl.html
+//
+// Contact: dimitry (dot) ishenko (at) (gee) mail (dot) com
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef FILEBUF_HPP
 #define FILEBUF_HPP
 
@@ -115,7 +122,7 @@ inline const char* filebuf::get_mode(std::ios_base::openmode mode)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 inline filebuf* filebuf::open(int fd, std::ios_base::openmode mode)
 {
-    const char* md= get_mode(mode);
+    const char* md = get_mode(mode);
     if(md)
     {
         __file_ = fdopen(fd, md);

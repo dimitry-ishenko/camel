@@ -92,9 +92,9 @@ HEADERS += \
     lib/process/process.hpp         \
     lib/string.hpp                  \
     lib/x11/server.hpp              \
-    src/config.h                    \
-    src/manager.h                   \
-    src/settings.h                  \
+    src/config.hpp                  \
+    src/manager.hpp                 \
+    src/settings.hpp                \
 
 OTHER_FILES += \
     AUTHORS                         \

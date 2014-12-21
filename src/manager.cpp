@@ -2,7 +2,7 @@
 #include "credentials/credentials.hpp"
 #include "errno_error.hpp"
 #include "logger/logger.hpp"
-#include "manager.h"
+#include "manager.hpp"
 #include "pam/pam_error.hpp"
 #include "process/environ.hpp"
 

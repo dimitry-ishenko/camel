@@ -14,14 +14,14 @@ void Config::parse()
 
     while(!file.atEnd())
     {
-        QString line= file.readLine().trimmed();
+        QString line = file.readLine().trimmed();
         if(line.isEmpty() || line[0] == '#') continue;
 
-        int pos= line.indexOf('=');
+        int pos = line.indexOf('=');
         if(pos < 0) throw std::runtime_error("Syntax error in config file");
 
-        QString name= line.left(pos).trimmed();
-        QString value= line.mid(pos+1).trimmed();
+        QString name = line.left(pos).trimmed();
+        QString value = line.mid(pos + 1).trimmed();
 
         if(name.isEmpty()) throw std::runtime_error("Name cannot be empty");
         if(value.isEmpty()) throw std::runtime_error("Value cannot be empty");
@@ -31,36 +31,36 @@ void Config::parse()
 
         else if(name == "xorg_args")
         {
-            QStringList args= value.split(' ', QString::SkipEmptyParts);
+            QStringList args = value.split(' ', QString::SkipEmptyParts);
 
             xorg_args.clear();
             std::transform(args.begin(), args.end(), xorg_args.end(), [](const QString& x) { return x.toStdString(); });
         }
         else if(name == "xorg_auth")
-            xorg_auth= value.toStdString();
+            xorg_auth = value.toStdString();
 
         else if(name == "pam_service")
-            pam_service= value.toStdString();
+            pam_service = value.toStdString();
 
         else if(name == "sessions_path")
-            sessions_path= value;
+            sessions_path = value;
 
         else if(name == "sessions")
-            sessions= value.split(QRegExp(" *, *"), QString::SkipEmptyParts);
+            sessions = value.split(QRegExp(" *, *"), QString::SkipEmptyParts);
 
         else if(name == "reboot")
-            reboot= value.toStdString();
+            reboot = value.toStdString();
 
         else if(name == "poweroff")
-            poweroff= value.toStdString();
+            poweroff = value.toStdString();
 
         else if(name == "theme_path")
-            theme_path= value;
+            theme_path = value;
 
         else if(name == "theme_name")
-            theme_name= value;
+            theme_name = value;
 
         else if(name == "theme_file")
-            theme_file= value;
+            theme_file = value;
     }
 }

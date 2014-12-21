@@ -13,14 +13,14 @@ class Settings: public QObject
 {
     Q_OBJECT
 public:
-    explicit Settings(QObject* parent= nullptr): QObject(parent) { }
+    explicit Settings(QObject* parent = nullptr): QObject(parent) { }
 
     ////////////////////
     Q_PROPERTY(QStringList sessions READ sessions NOTIFY sessionsChanged)
     const QStringList& sessions() const { return _M_sessions; }
     void setSessions(const QStringList& x)
     {
-        _M_sessions= x;
+        _M_sessions = x;
         emit sessionsChanged(x);
 
         resetSession();
@@ -38,7 +38,7 @@ public:
     const QString& username() const { return _M_username; }
     void setUsername(const QString& x)
     {
-        _M_username= x;
+        _M_username = x;
         emit usernameChanged(x);
     }
 
@@ -46,7 +46,7 @@ public:
     const QString& password() const { return _M_password; }
     void setPassword(const QString& x)
     {
-        _M_password= x;
+        _M_password = x;
         emit passwordChanged(x);
     }
 
@@ -55,7 +55,7 @@ public:
     const QString& password_n() const { return _M_password_n; }
     void setPassword_n(const QString& x)
     {
-        _M_password_n= x;
+        _M_password_n = x;
         emit password_nChanged(x);
     }
 
@@ -64,7 +64,7 @@ public:
     const QString& hostname() const { return _M_hostname; }
     void setHostname(const QString& x)
     {
-        _M_hostname= x;
+        _M_hostname = x;
         emit hostnameChanged(x);
     }
 

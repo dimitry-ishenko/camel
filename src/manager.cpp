@@ -25,10 +25,10 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
     QObject(parent)
 {
     ////////////////////
-    if(name.size()) config.xorg_name= name.toStdString();
-    if(config.xorg_name.empty()) config.xorg_name= x11::server::default_name;
+    if(name.size()) config.xorg_name = name.toStdString();
+    if(config.xorg_name.empty()) config.xorg_name = x11::server::default_name;
 
-    if(path.size()) config.path= path;
+    if(path.size()) config.path = path;
 
     try
     {
@@ -40,17 +40,17 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
         QDir dir(config.sessions_path);
         if(dir.isReadable())
         {
-            QStringList sessions= dir.entryList(QDir::Files);
+            QStringList sessions = dir.entryList(QDir::Files);
             if(config.sessions.size())
-                sessions= sessions.toSet().intersect(config.sessions.toSet()).toList();
+                sessions = sessions.toSet().intersect(config.sessions.toSet()).toList();
 
             settings.setSessions(sessions);
         }
 
         ////////////////////
-        server= x11::server(config.xorg_name, config.xorg_auth, config.xorg_args);
+        server = x11::server(config.xorg_name, config.xorg_auth, config.xorg_args);
 
-        context= pam::context(config.pam_service);
+        context = pam::context(config.pam_service);
         context.set_pass_func(std::bind(&Manager::password, this, std::placeholders::_1, std::placeholders::_2));
         context.set_error_func(std::bind(&Manager::response, this, std::placeholders::_1));
 
@@ -59,7 +59,7 @@ Manager::Manager(const QString& name, const QString& path, QObject* parent):
     }
     catch(...)
     {
-        exception= std::current_exception();
+        exception = std::current_exception();
     }
 }
 
@@ -93,8 +93,8 @@ try
 
     context.open_session();
 
-    QString session= settings.session();
-    if(!session.size()) session= "Xsession";
+    QString session = settings.session();
+    if(!session.size()) session = "Xsession";
 
     app::process process(process::group, &Manager::startup, this, session);
     process.join();
@@ -111,21 +111,21 @@ catch(std::exception& e)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::render()
 {
-    QString current= QDir::currentPath();
+    QString current = QDir::currentPath();
     try
     {
-        if(!QDir::setCurrent(config.theme_path+ "/"+ config.theme_name))
-            throw std::runtime_error("Theme dir "+ config.theme_name.toStdString()+ " not found");
+        if(!QDir::setCurrent(config.theme_path + "/" + config.theme_name))
+            throw std::runtime_error("Theme dir " + config.theme_name.toStdString() + " not found");
 
         if(!QFile::exists(config.theme_file))
-            throw std::runtime_error("Theme file "+ config.theme_file.toStdString()+ " not found");
+            throw std::runtime_error("Theme file " + config.theme_file.toStdString() + " not found");
 
-        QDeclarativeView* view= new QDeclarativeView(QApplication::desktop());
+        QDeclarativeView* view = new QDeclarativeView(QApplication::desktop());
         view->rootContext()->setContextProperty("settings", &settings);
         view->setSource(QUrl::fromLocalFile(config.theme_file));
         view->setGeometry(QApplication::desktop()->screenGeometry());
 
-        QGraphicsObject* root= view->rootObject();
+        QGraphicsObject* root = view->rootObject();
         root->setProperty("width", view->width());
         root->setProperty("height", view->height());
 
@@ -154,10 +154,10 @@ void Manager::render()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Manager::password(const std::string& message, std::string& value)
 {
-    bool x= message.find("new") != std::string::npos
-         || message.find("New") != std::string::npos
-         || message.find("NEW") != std::string::npos;
-    value= x? settings.password_n().toStdString(): settings.password().toStdString();
+    bool x = message.find("new") != std::string::npos
+          || message.find("New") != std::string::npos
+          || message.find("NEW") != std::string::npos;
+    value = x ? settings.password_n().toStdString() : settings.password().toStdString();
     return true;
 }
 
@@ -167,7 +167,7 @@ bool Manager::response(const std::string& message)
     if(do_respond)
     {
         emit error(QString::fromStdString(message));
-        do_respond= false;
+        do_respond = false;
     }
     return true;
 }
@@ -177,7 +177,7 @@ bool Manager::authenticate()
 try
 {
     context.insert(pam::item::user, settings.username().toStdString());
-    do_respond= true;
+    do_respond = true;
     context.authenticate();
 
     return true;
@@ -186,7 +186,7 @@ catch(pam::account_error& e)
 {
     if(e.code() == pam::errc::new_authtok_reqd)
     {
-        QString password= settings.password();
+        QString password = settings.password();
 
         while(true)
         {
@@ -227,7 +227,7 @@ int Manager::startup(const QString& session)
     credentials c(context.get(pam::item::user));
     app::environ e;
 
-    std::string auth= c.home()+ "/.Xauthority";
+    std::string auth = c.home()+ "/.Xauthority";
 
     std::string x;
     bool found;
@@ -236,13 +236,13 @@ int Manager::startup(const QString& session)
     e.insert("LOGNAME", c.username());
     e.insert("HOME", c.home());
 
-    x= this_environ::get("PATH", &found);
+    x = this_environ::get("PATH", &found);
     if(found) e.insert("PATH", x);
 
     e.insert("PWD", c.home());
     e.insert("SHELL", c.shell());
 
-    x= this_environ::get("TERM", &found);
+    x = this_environ::get("TERM", &found);
     if(found) e.insert("TERM", x);
 
     e.insert("DISPLAY", context.get(pam::item::tty));
@@ -251,20 +251,20 @@ int Manager::startup(const QString& session)
     c.morph_into();
     server.set_cookie(auth);
 
-    this_process::replace_e(e, (config.sessions_path+ "/"+ session).toStdString());
+    this_process::replace_e(e, (config.sessions_path + "/" + session).toStdString());
     return 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Manager::change_password()
 {
-    app::uid orig_uid= this_user::uid();
+    app::uid orig_uid = this_user::uid();
     this_user::morph_into( credentials(context.get(pam::item::user)).uid(), false );
 
-    bool code= true;
+    bool code = true;
     try
     {
-        do_respond= true;
+        do_respond = true;
         context.change_pass();
 
         emit info("Password changed");
@@ -272,7 +272,7 @@ bool Manager::change_password()
     catch(pam::pass_error& e)
     {
         response(e.what());
-        code= false;
+        code = false;
     }
 
     this_user::morph_into(orig_uid, false);

@@ -21,18 +21,18 @@ class Manager: public QObject
 {
     Q_OBJECT
 public:
-    explicit Manager(const QString& name, const QString& path, QObject* parent= nullptr);
+    explicit Manager(const QString& name, const QString& path, QObject* parent = nullptr);
     int run();
 
-    static constexpr int code_enter=0;
-    static constexpr int code_cancel=1;
+    static constexpr int code_enter = 0;
+    static constexpr int code_cancel = 1;
 
 signals:
     void info(const QVariant& message);
     void error(const QVariant& message);
 
-    void enter_user_pass(const QVariant& message= QVariant());
-    void enter_pass(const QVariant& message= QVariant());
+    void enter_user_pass(const QVariant& message = QVariant());
+    void enter_pass(const QVariant& message = QVariant());
 
 private slots:
     void enter();
@@ -49,7 +49,7 @@ private:
 
     void render();
 
-    bool do_respond= false;
+    bool do_respond = false;
     bool response(const std::string& message);
 
     bool password(const std::string& message, std::string& value);
@@ -58,7 +58,7 @@ private:
     bool change_password();
     int startup(const QString& session);
 
-    std::exception_ptr exception= nullptr;
+    std::exception_ptr exception = nullptr;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

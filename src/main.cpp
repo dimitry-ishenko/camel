@@ -5,8 +5,8 @@
 #include <string>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-const std::string usage= "Usage: camel [-h|--help]\n"
-                         "       camel [:n] [<path-to-config-file>]";
+const std::string usage = "Usage: camel [-h|--help]\n"
+                          "       camel [:n] [<path-to-config-file>]";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[])
@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     }
 
     QString name, path;
-    for(int n=1; n < argc; ++n)
+    for(int n = 1; n < argc; ++n)
     {
         QString arg(argv[n]);
         if(arg == "-h" || arg == "--help")
@@ -28,9 +28,9 @@ int main(int argc, char* argv[])
         }
         else if(arg[0] == ':')
         {
-            name= arg;
+            name = arg;
         }
-        else path= arg;
+        else path = arg;
     }
 
     return Manager(name, path).run();

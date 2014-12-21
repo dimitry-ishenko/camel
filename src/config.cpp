@@ -2,6 +2,7 @@
 #include "config.h"
 
 #include <QFile>
+
 #include <algorithm>
 #include <stdexcept>
 

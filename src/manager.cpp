@@ -1,21 +1,22 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+#include "credentials/credentials.hpp"
+#include "errno_error.hpp"
+#include "logger/logger.hpp"
 #include "manager.h"
-#include "credentials/credentials.h"
-#include "pam/pam_error.h"
-#include "process/environ.h"
-#include "logger/logger.h"
-#include "errno_error.h"
+#include "pam/pam_error.hpp"
+#include "process/environ.hpp"
 
 #include <QApplication>
-#include <QtDeclarative/QDeclarativeView>
-#include <QtDeclarative/QDeclarativeContext>
 #include <QDesktopWidget>
-#include <QGraphicsObject>
-#include <QtNetwork/QHostInfo>
-#include <QTimer>
 #include <QDir>
 #include <QFile>
+#include <QGraphicsObject>
+#include <QString>
 #include <QStringList>
+#include <QTimer>
+#include <QtDeclarative/QDeclarativeContext>
+#include <QtDeclarative/QDeclarativeView>
+#include <QtNetwork/QHostInfo>
 
 #include <functional>
 

@@ -5,12 +5,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "config.h"
 #include "settings.h"
-#include "x11/server.h"
-#include "pam/pam.h"
+#include "pam/pam.hpp"
+#include "x11/server.hpp"
 
 #include <QObject>
-#include <QVariant>
 #include <QString>
+#include <QVariant>
 
 #include <exception>
 
